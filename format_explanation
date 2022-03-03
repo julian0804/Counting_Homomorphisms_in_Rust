@@ -5,11 +5,11 @@ n <number> <NodeType> <list of containing vertices>
 .
 .
 n <number> <NodeType> <list of containing vertices>
-<parent Node> <child Node>
+a <parent Node> <child Node>
 .
 .
 .
-<parent Node> <child Node>
+a <parent Node> <child Node>
 
 
 NodeTypes = {

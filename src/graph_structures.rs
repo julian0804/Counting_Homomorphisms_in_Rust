@@ -10,7 +10,8 @@ pub mod graph_structures {
     pub mod adjacency{
         use super::*;
         /*
-        Implementation of a simple adjacency list
+        Implementation of a simple adjacency list for a directed graph with loop but without multi-edges
+        Vertices: 1 ... N
         */
         #[derive(Debug,PartialEq)]
         pub struct AdjList{
@@ -31,24 +32,15 @@ pub mod graph_structures {
              */
             pub fn number_of_edges(&self) -> usize
             {
-                let mut sum = 0;
-                for key in self.list.keys()
-                {
-                    sum += self.list.get(key).unwrap().len();
-                }
-                sum
+                self.list.iter().map(|(i,v)| v.len()).sum()
             }
 
             /*
             returning the number of vertices by searching the maximum key
              */
-            pub fn number_of_vertices(&self) -> usize
+            pub fn number_of_vertices(&self) -> Vertex
             {
-                let max = self.list.keys().iter().max();
-                match  max{
-                    Some(i) => i,
-                    None => 0,
-                }
+                *self.list.keys().max().unwrap_or(&0)
             }
 
             /*
@@ -103,7 +95,23 @@ pub mod graph_structures {
         }
     }
 
+    pub mod nice_tree_decomposition{
+        use crate::graph_structures::graph_structures::adjacency::AdjList;
+        use super::*;
 
+        enum NodeType{
+            Leaf(VertexBag),
+            Introduce(VertexBag),
+            Forget(VertexBag),
+            Join(VertexBag)
+        }
+
+        struct NiceTreeDecomposition{
+            adjacency_list : AdjList,
+            node_data : HashMap<usize, NodeType>,
+            root : usize
+        }
+    }
 
 }
 
@@ -127,5 +135,16 @@ mod tests {
 
         assert_eq!(adjlist.check_edge(1,3), true);
         assert_eq!(adjlist.check_edge(3,1), false);
+
+        assert_eq!(adjlist.number_of_vertices(), 3);
+        assert_eq!(adjlist.out_neighbours(2), None);
+        assert_eq!(adjlist.out_degree(2), 0);
+
+        assert_eq!(*(adjlist.out_neighbours(1).unwrap()), vec![2,3]);
+        assert_ne!(*(adjlist.out_neighbours(1).unwrap()), vec![4]);
+        assert_ne!(*(adjlist.out_neighbours(1).unwrap()), vec![3,2]);
+
+        let mut adjlist1 = AdjList::new();
+        assert_eq!(adjlist1.number_of_vertices(),0);
     }
 }
