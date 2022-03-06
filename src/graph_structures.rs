@@ -150,6 +150,9 @@ pub mod graph_structures {
                 }
             }
 
+            /*
+           clones the bag of the given vertex
+             */
             pub fn get_bag_clone(&self, v : &Vertex) -> VertexBag
             {
                 match self.get_node_data(v){
@@ -161,6 +164,9 @@ pub mod graph_structures {
                 }
             }
 
+            /*
+            Returns the union of all bags of the subtree rooted at the given node
+             */
             pub fn get_union(&self, v : &Vertex) -> VertexBag
             {
                 let children = self.adjacency_list.out_neighbours(*v);
@@ -176,17 +182,6 @@ pub mod graph_structures {
                 }
                 union
             }
-
-            /*
-            TODO: to be done
-            pub fn import_from_file<P>(filename : P)
-                where P : AsRef<Path>
-            {
-
-            }
-
-             */
-
 
         }
 

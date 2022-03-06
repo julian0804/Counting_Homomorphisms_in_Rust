@@ -1,15 +1,14 @@
 use super::lib::*;
 
-pub mod file_handler{
-
+pub mod file_handler {
     use std::collections::{HashMap, HashSet};
+    use std::error::Error;
     use std::fs::File;
     use std::io::{self, BufRead};
     use std::path::Path;
-    use crate::graph_structures::graph_structures::adjacency::AdjList;
-    use crate::nice_tree_decomposition::*;
-
-
+    use crate::graph_structures::graph_structures::adjacency::*;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::*;
+    use crate::graph_structures::graph_structures::{Vertex, VertexBag};
 
     /*
     Reads file and returns BufReader
@@ -24,114 +23,75 @@ pub mod file_handler{
     /*
     creates nice tree decomposition from file
      */
-    pub fn create_ntd_from_file<P>(filename : P)
-        where P : AsRef<Path>
+    pub fn create_ntd_from_file<P>(filename: P) -> Option<NiceTreeDecomposition>
+        where P: AsRef<Path>
     {
         // These values
         let mut number_of_nodes = 0;
         let mut max_bag_size = 0;
         let mut number_of_vertices = 0;
 
-        let mut temporary_Nodes = HashMap::new();
-        let mut adjlist = AdjList::new();
+        let mut node_data: HashMap<Vertex, NodeType> = HashMap::new();
+        let mut adjacency_list = AdjList::new();
 
-        if let Ok(lines) = read_lines(filename)
-        {
+        if let Ok(lines) = read_lines(filename){
             for line in lines {
-                if let Ok(ip) = line {
-                    // The following code is for evaluating line by line
-                    let mut args = ip.split(" ");
-                    let tag = args.next();
+                let i = line.unwrap();
+                let mut args = i.split(" ");
+                let type_arg = args.next();
 
-                    match tag{
-                        None => {break;},
-                        Some("s") => {
-                            number_of_nodes = args.next().unwrap().parse::<i32>().unwrap();
-                            max_bag_size = args.next().unwrap().parse::<i32>().unwrap();
-                            number_of_vertices = args.next().unwrap().parse::<i32>().unwrap();
-                        },
-                        Some("n") => {
-                            let nr = args.next().unwrap().parse::<i32>().unwrap();
-                            let node_type = args.next();
+                match type_arg {
+                    Some("s") => {
+                        number_of_nodes = args.next().unwrap().parse::<i32>().unwrap();
+                        max_bag_size = args.next().unwrap().parse::<i32>().unwrap();
+                        number_of_vertices = args.next().unwrap().parse::<i32>().unwrap();
+                    },
+                    Some("n") => {
+                        let nr = args.next().unwrap().parse::<u32>().unwrap();
+                        let node_type = args.next();
 
-                            // TODO: create closure for the loop in the following
-                            match node_type {
-                                None => {todo!("return Err")},
-                                Some("l") => {
-                                    let mut bag = Bag::from([]);
-                                    loop{
-                                         if let Some(v) = args.next(){
-                                             bag.insert(v.parse::<Vertex>().unwrap());
-                                         }
-                                         else {
-                                             break;
-                                         }
-                                    }
-                                    temporary_Nodes.insert(nr,TemporaryNodeType::Leaf(bag));
-                                },
-                                Some("i") => {
-                                    let mut bag = Bag::from([]);
-                                    loop{
-                                        if let Some(v) = args.next(){
-                                            bag.insert(v.parse::<Vertex>().unwrap());
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    temporary_Nodes.insert(nr,TemporaryNodeType::Introduce(bag));
-                                },
-                                Some("f") => {
-                                    let mut bag = Bag::from([]);
-                                    loop {
-                                        if let Some(v) = args.next(){
-                                            bag.insert(v.parse::<Vertex>().unwrap());
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    temporary_Nodes.insert(nr,TemporaryNodeType::Forget(bag));
-                                },
-                                Some("j") => {
-                                    let mut bag = Bag::from([]);
-                                    loop {
-                                        if let Some(v) = args.next(){
-                                            bag.insert(v.parse::<Vertex>().unwrap());
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                    }
-                                    temporary_Nodes.insert(nr,TemporaryNodeType::Join(bag));
-                                },
-                                _ => {todo!("return Err")}
+                        let mut constructed_bag = || {
+                            let mut bag = VertexBag::from([]);
+                            loop {
+                                if let Some(v) = args.next() {
+                                    bag.insert(v.parse::<Vertex>().unwrap());
+                                } else {
+                                    break;
+                                }
                             }
-                        },
-                        Some("a") => {
-                            let from = args.next().unwrap().parse::<Vertex>().unwrap();
-                            let to = args.next().unwrap().parse::<Vertex>().unwrap();
-                            adjlist.insert_edge(from,to);
-                        },
-                        _ => { todo!("return Err") },
-                    }
+                            bag
+                        };
 
+                        match node_type {
+                            Some("l") => { node_data.insert(nr, NodeType::Leaf(constructed_bag())); },
+                            Some("i") => { node_data.insert(nr, NodeType::Introduce(constructed_bag())); },
+                            Some("f") => { node_data.insert(nr, NodeType::Forget(constructed_bag())); },
+                            Some("j") => { node_data.insert(nr, NodeType::Join(constructed_bag())); },
+                            _ => {}
+                        }
+                    },
+                    Some("a") => {
+                        let from = args.next().unwrap().parse::<Vertex>().unwrap();
+                        let to = args.next().unwrap().parse::<Vertex>().unwrap();
+                        adjacency_list.insert_edge(from,to);
+                    }
+                    _ => {}
                 }
             }
 
+            println!("number of nodes = {:?}, max bag size = {:?}, number of vertices = {:?}",
+                     number_of_nodes,
+                     max_bag_size,
+                     number_of_vertices);
+            println!("{:?}", node_data);
+            println!("{:?}", adjacency_list);
+
+            Some(NiceTreeDecomposition::new(adjacency_list, node_data,0))
         }
-        println!("number of nodes = {:?}, max bag size = {:?}, number of vertices = {:?}",
-                 number_of_nodes,
-                 max_bag_size,
-                 number_of_vertices);
-        println!("{:?}", temporary_Nodes);
-        println!("{:?}", adjlist);
+        else { None }
 
-        /*
-        todo: make code more beautiful...
 
-        todo: implement some form of post order to implement construction
-         */
     }
-
 }
+
+
