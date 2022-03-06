@@ -10,7 +10,9 @@ pub mod graph_structures {
     pub mod adjacency{
         use super::*;
         /*
-        Implementation of a simple adjacency list for a directed graph with loop but without multi-edges
+        Implementation of a simple adjacency list for a directed graph with possible loops
+        but without multi-edges
+
         Vertices: 1 ... N
         */
         #[derive(Debug,PartialEq)]
@@ -99,25 +101,110 @@ pub mod graph_structures {
         use crate::graph_structures::graph_structures::adjacency::AdjList;
         use super::*;
 
-        enum NodeType{
+        #[derive(Debug,PartialEq)]
+        pub enum NodeType{
             Leaf(VertexBag),
             Introduce(VertexBag),
             Forget(VertexBag),
             Join(VertexBag)
         }
 
-        struct NiceTreeDecomposition{
-            adjacency_list : AdjList,
-            node_data : HashMap<usize, NodeType>,
-            root : usize
+        pub struct NiceTreeDecomposition{
+            pub adjacency_list : AdjList,
+            pub node_data : HashMap<Vertex, NodeType>,
+            pub root : Vertex
         }
+
+        pub struct StingyOrder{
+            order : Vec<Vertex>,
+        }
+
+        impl NiceTreeDecomposition {
+            /*
+            creates a tree decomposition given
+            -> adjacency List
+            -> node_data
+            -> root
+             */
+            pub fn new(adjacency_list: AdjList, node_data: HashMap<Vertex, NodeType>, root: Vertex) -> NiceTreeDecomposition {
+                NiceTreeDecomposition { adjacency_list, node_data, root }
+            }
+
+            /*
+            gets the node data
+             */
+            pub fn get_node_data(&self, v: &Vertex) -> Option<&NodeType>{
+                self.node_data.get(v)
+            }
+
+            /*
+            returns the reference to the bag of the given node
+            */
+            pub fn get_bag(&self, v : &Vertex) -> Option<&VertexBag>{
+                match self.get_node_data(v){
+                    None => None,
+                    Some(NodeType::Leaf(n)) => Some(&n),
+                    Some(NodeType::Introduce(n)) => Some(&n),
+                    Some(NodeType::Forget(n)) => Some(&n),
+                    Some(NodeType::Join(n)) => Some(&n),
+                }
+            }
+
+            pub fn get_bag_clone(&self, v : &Vertex) -> VertexBag
+            {
+                match self.get_node_data(v){
+                    None => VertexBag::new(),
+                    Some(NodeType::Leaf(n)) => n.clone(),
+                    Some(NodeType::Introduce(n)) => n.clone(),
+                    Some(NodeType::Forget(n)) => n.clone(),
+                    Some(NodeType::Join(n)) => n.clone(),
+                }
+            }
+
+            pub fn get_union(&self, v : &Vertex) -> VertexBag
+            {
+                let children = self.adjacency_list.out_neighbours(*v);
+                let mut union: VertexBag = self.get_bag_clone(v);
+
+                match children {
+                    Some(vec) => {
+                        for i in vec{
+                            union.extend(&self.get_union(i));
+                        }
+                    },
+                    None => (),
+                }
+                union
+            }
+
+            /*
+            TODO: to be done
+            pub fn import_from_file<P>(filename : P)
+                where P : AsRef<Path>
+            {
+
+            }
+
+             */
+
+
+        }
+
+
+
     }
 
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{HashMap, HashSet};
     use crate::graph_structures::graph_structures::adjacency::AdjList;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::Leaf;
+    use crate::graph_structures::graph_structures::{Vertex, VertexBag};
+    use crate::nice_tree_decomposition::Node;
+
     #[test]
     fn adjacency_list(){
         let mut adjlist = AdjList::new();
@@ -146,5 +233,48 @@ mod tests {
 
         let mut adjlist1 = AdjList::new();
         assert_eq!(adjlist1.number_of_vertices(),0);
+    }
+
+    #[test]
+    fn tree_decomposition()
+    {
+        let mut node_data: HashMap<Vertex, NodeType> = HashMap::new();
+        node_data.insert(1, NodeType::Leaf(VertexBag::from([1])));
+        node_data.insert(2, NodeType::Introduce(VertexBag::from([1,2])));
+        node_data.insert(3, NodeType::Forget(VertexBag::from([2])));
+        node_data.insert(4, NodeType::Leaf(VertexBag::from([2])));
+        node_data.insert(5, NodeType::Introduce(VertexBag::from([2,3])));
+        node_data.insert(6, NodeType::Forget(VertexBag::from([2])));
+        node_data.insert(7, NodeType::Join(VertexBag::from([2])));
+        node_data.insert(8, NodeType::Introduce(VertexBag::from([2,4])));
+        node_data.insert(9, NodeType::Forget(VertexBag::from([4])));
+        node_data.insert(10, NodeType::Forget(VertexBag::from([])));
+
+        let mut adj_list = AdjList::new();
+        adj_list.insert_edge(2,1);
+        adj_list.insert_edge(3,2);
+        adj_list.insert_edge(7,3);
+        adj_list.insert_edge(5,4);
+        adj_list.insert_edge(6,5);
+        adj_list.insert_edge(7,6);
+        adj_list.insert_edge(8,7);
+        adj_list.insert_edge(9,8);
+        adj_list.insert_edge(10,9);
+
+        let treedecomp = NiceTreeDecomposition::new(adj_list, node_data, 10);
+
+        assert_eq!(treedecomp.get_bag(&7), Some(&VertexBag::from([2])));
+        assert_eq!(treedecomp.get_bag(&2), Some(&VertexBag::from([2,1])));
+        assert_eq!(treedecomp.get_bag(&2), Some(&VertexBag::from([1,2])));
+        assert_eq!(treedecomp.get_bag(&10), Some(&VertexBag::from([])));
+
+        assert_eq!(treedecomp.get_node_data(&2), Some(&NodeType::Introduce(VertexBag::from([1,2]))));
+        assert_eq!(treedecomp.get_union(&2), VertexBag::from([1,2]));
+
+
+        assert_eq!(treedecomp.adjacency_list.out_neighbours(7), Some(&Vec::from([3,6])) );
+
+        assert_eq!(treedecomp.get_union(&7), VertexBag::from([1,2,3]));
+        assert_eq!(treedecomp.get_union(&10), VertexBag::from([1,2,3,4]));
     }
 }
