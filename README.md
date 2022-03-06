@@ -3,7 +3,8 @@
 ## Input Format for NTD
 
 Here is an example for the input format, representing the following
-nice tree decomposition.
+nice tree decomposition. Format has been inspired by 
+[this format for tree decompositions](https://github.com/PACE-challenge/Treewidth#output-format)
 
 <img src="secondary_ressources/example_graph_ntd_format.jpg" width="200">
 
