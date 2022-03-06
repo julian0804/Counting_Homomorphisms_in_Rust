@@ -3,7 +3,9 @@
 ## Input Format for NTD
 
 Here is an example for the input format, representing the following
-nice tree decomposition [need a sketch]
+nice tree decomposition.
+
+![example for a nice tree decomposition](secondary_ressources/example_graph_ntd_format.jpg)
 
 - Consisting of three parts:
 1. with `s` at the beginning: This line describes the main parameter of 
