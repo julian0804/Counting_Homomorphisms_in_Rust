@@ -22,6 +22,8 @@ pub mod file_handler {
 
     /*
     creates nice tree decomposition from file
+    Does not check if the tree decomposition is correct
+    TODO: make code more solid by catching errors of wrong formation
      */
     pub fn create_ntd_from_file<P>(filename: P) -> Option<NiceTreeDecomposition>
         where P: AsRef<Path>
