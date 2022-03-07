@@ -73,6 +73,17 @@ pub mod graph_structures {
                 }
             }
 
+
+            /*
+            insert multiple edges given by a Vector of tuples
+             */
+            pub fn insert_edges(&mut self, edges : Vec<(Vertex, Vertex)>)
+            {
+                for (a,b) in edges{
+                    self.insert_edge(a,b);
+                }
+            }
+
             /*
             Returns an &Vec<Vertex> of the out neighbours if the vertex "from" has some, None otherwise
              */
@@ -199,7 +210,6 @@ mod tests {
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::Leaf;
     use crate::graph_structures::graph_structures::{Vertex, VertexBag};
-    use crate::nice_tree_decomposition::Node;
 
     #[test]
     fn adjacency_list(){
@@ -256,6 +266,10 @@ mod tests {
         adj_list.insert_edge(8,7);
         adj_list.insert_edge(9,8);
         adj_list.insert_edge(10,9);
+
+        let mut adj_list_2 = AdjList::new();
+        adj_list_2.insert_edges(vec![(2,1),(3,2),(7,3),(5,4),(6,5),(7,6),(8,7),(9,8),(10,9),]);
+        assert_eq!(adj_list, adj_list_2);
 
         let treedecomp = NiceTreeDecomposition::new(adj_list, node_data, 10);
 
