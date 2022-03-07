@@ -81,14 +81,10 @@ pub mod file_handler {
                 }
             }
 
-            println!("number of nodes = {:?}, max bag size = {:?}, number of vertices = {:?}",
-                     number_of_nodes,
-                     max_bag_size,
-                     number_of_vertices);
-            println!("{:?}", node_data);
-            println!("{:?}", adjacency_list);
+            // TODO: Find root
+            Some(NiceTreeDecomposition::new(adjacency_list, node_data,10))
 
-            Some(NiceTreeDecomposition::new(adjacency_list, node_data,0))
+
         }
         else { None }
 
@@ -98,7 +94,34 @@ pub mod file_handler {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+    use crate::create_ntd_from_file;
+    use crate::graph_structures::graph_structures::adjacency::AdjList;
+    use crate::graph_structures::graph_structures::{Vertex, VertexBag};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::{Forget, Introduce, Join, Leaf};
 
+    #[test]
+    fn test_ntd_creation_from_file(){
+        let mut example_adjacency_list = AdjList::new();
+        example_adjacency_list.insert_edges(vec![
+            (10,9), (6,5), (9,8), (8,7), (7,3), (7,6), (5,4), (2,1), (3,2)
+        ]);
+        let example_node_data: HashMap<Vertex, NodeType> = HashMap::from([
+            (1 , Leaf(VertexBag::from([1]))),
+            (2 , Introduce(VertexBag::from([1,2]))),
+            (3 , Forget(VertexBag::from([2]))),
+            (4 , Leaf(VertexBag::from([2]))),
+            (5 , Introduce(VertexBag::from([2,3]))),
+            (6 , Forget(VertexBag::from([2]))),
+            (7 , Join(VertexBag::from([2]))),
+            (8 , Introduce(VertexBag::from([2,4]))),
+            (9 , Forget(VertexBag::from([4]))),
+            (10 , Forget(VertexBag::from([]))),
+        ]);
 
+        assert_eq!(create_ntd_from_file("example.ntd").unwrap(),
+                   NiceTreeDecomposition::new(example_adjacency_list, example_node_data, 10));
+    }
 }
 
