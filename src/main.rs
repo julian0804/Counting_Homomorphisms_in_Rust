@@ -7,6 +7,4 @@ use crate::file_handler::file_handler::*;
 
 fn main(){
 
-    let i = create_ntd_from_file("example.ntd").unwrap();
-    println!("{:?}", i);
 }
