@@ -109,6 +109,7 @@ pub mod graph_structures {
             Join(VertexBag)
         }
 
+        #[derive(Debug, PartialEq)]
         pub struct NiceTreeDecomposition{
             pub adjacency_list : AdjList,
             pub node_data : HashMap<Vertex, NodeType>,
