@@ -17,7 +17,8 @@ pub mod graph_structures {
         */
         #[derive(Debug,PartialEq)]
         pub struct AdjList{
-            pub list : HashMap<Vertex, Vec<Vertex>>,
+            pub adjacency_list: HashMap<Vertex, Vec<Vertex>>, // safes all out-going edges
+            pub reversed_adjacency_list : HashMap<Vertex, Vec<Vertex>>, // safes all in-going edges
         }
 
         impl AdjList{
@@ -26,7 +27,7 @@ pub mod graph_structures {
            Returns an empty AdjList
             */
             pub fn new() -> AdjList{
-                AdjList{list : HashMap::new() }
+                AdjList{ adjacency_list: HashMap::new() , reversed_adjacency_list : HashMap::new()}
             }
 
             /*
@@ -34,7 +35,7 @@ pub mod graph_structures {
              */
             pub fn number_of_edges(&self) -> usize
             {
-                self.list.iter().map(|(i,v)| v.len()).sum()
+                self.adjacency_list.iter().map(|(i,v)| v.len()).sum()
             }
 
             /*
@@ -42,17 +43,17 @@ pub mod graph_structures {
              */
             pub fn number_of_vertices(&self) -> Vertex
             {
-                *self.list.keys().max().unwrap_or(&0)
+                *self.adjacency_list.keys().max().unwrap_or(&0)
             }
 
             /*
             Checks if the edge (from, to) exists in this adjacency list
              */
             pub fn check_edge(&self, from : Vertex, to : Vertex) -> bool {
-                if self.list.get(&from) == None{
+                if self.adjacency_list.get(&from) == None{
                     return false;
                 }
-                self.list.get(&from).unwrap().contains(&to)
+                self.adjacency_list.get(&from).unwrap().contains(&to)
             }
             /*
             inserts edge if not already available
@@ -61,15 +62,26 @@ pub mod graph_structures {
                 // Checks if edge already exists
                 if !self.check_edge(from,to) {
 
+                    // Inserts edge into the adjacency_list
                     // Checks if we already have an edge going out of "from"
-                    if self.list.get(&from) != None{
-                        if let mut nlist = self.list.get_mut(&from).unwrap(){
-                            nlist.push(to);
-                        }
+                    if let Some(out_list) = self.adjacency_list.get_mut(&from){
+                        out_list.push(to);
+                    }else{
+                        self.adjacency_list.insert(from, vec![to]);
                     }
-                    else{
-                        self.list.insert(from,vec![to]);
+
+
+                    // Inserts edge into the reversed_adjacency_list
+                    // Checks if we already have an edge going in "to"
+                    if let Some(in_list) = self.reversed_adjacency_list.get_mut(&to)
+                    {
+                        in_list.push(from);
                     }
+                    else {
+                        self.reversed_adjacency_list.insert(to, vec![from]);
+                    }
+
+
                 }
             }
 
@@ -89,12 +101,14 @@ pub mod graph_structures {
              */
             pub fn out_neighbours(&self, from : Vertex) -> Option<&Vec<Vertex>>
             {
-                if let Some(i) = self.list.get(&from){
-                    Some(i)
-                }
-                else {
-                    None
-                }
+                self.adjacency_list.get(&from)
+            }
+
+            /*
+            Returns a Vector of neighbours going in
+             */
+            pub fn in_neighbours(&self, to : Vertex) -> Option<&Vec<Vertex>> {
+                self.reversed_adjacency_list.get(&to)
             }
 
             /*
@@ -103,6 +117,15 @@ pub mod graph_structures {
             pub fn out_degree(&self, from : Vertex) -> usize
             {
                 if let Some(i) = self.out_neighbours(from){ i.len() }
+                else { 0 }
+            }
+
+            /*
+            Returns the in degree of the vertex "from"
+             */
+            pub fn in_degree(&self, to : Vertex) -> usize
+            {
+                if let Some(i) = self.in_neighbours(to){ i.len() }
                 else { 0 }
             }
         }
@@ -239,6 +262,17 @@ mod tests {
 
         let mut adjlist1 = AdjList::new();
         assert_eq!(adjlist1.number_of_vertices(),0);
+
+        // test cases to check in_neighbours
+        assert_eq!(adjlist.in_neighbours(1), None);
+        assert_eq!(*(adjlist.in_neighbours(2).unwrap()), vec![1,3]);
+        assert_eq!(*(adjlist.in_neighbours(3).unwrap()), vec![1]);
+
+        // test cases to check in_degree
+        assert_eq!(adjlist.in_degree(1),0);
+        assert_eq!(adjlist.in_degree(2),2);
+        assert_eq!(adjlist.in_degree(3),1);
+
     }
 
     #[test]
