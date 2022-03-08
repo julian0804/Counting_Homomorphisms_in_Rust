@@ -81,8 +81,13 @@ pub mod file_handler {
                 }
             }
 
-            // TODO: Find root
-            Some(NiceTreeDecomposition::new(adjacency_list, node_data,10))
+            // naive root finding
+            let mut root : Vertex = 1;
+            while let Some(i) = adjacency_list.in_neighbours(root){
+                root = *i.get(0).unwrap();
+            }
+
+            Some(NiceTreeDecomposition::new(adjacency_list, node_data, root))
 
 
         }
