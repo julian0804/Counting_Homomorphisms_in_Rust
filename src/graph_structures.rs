@@ -270,6 +270,48 @@ pub mod graph_structures {
             }
 
             /*
+            This function returns a stingy ordering of the tree decomposition
+             */
+            pub fn stingy_ordering(&self) -> Vec<Vertex>
+            { self.recursive_stingy_ordering(self.get_root()) }
+
+            /*
+            This function calculates the stingy ordering recursively
+            -> for explanation see thesis
+             */
+            pub fn recursive_stingy_ordering(&self, current_vertex : Vertex) -> Vec<Vertex>
+            {
+                let mut result: Vec<Vertex>= Vec::new();
+
+                match self.adjacency_list.out_degree(current_vertex){
+                    1 => {
+                        let child = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(0).unwrap();
+                        result = self.recursive_stingy_ordering(*child);
+                    },
+                    2 =>{
+                        let mut child1 = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(0).unwrap();
+                        let mut child2 = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(1).unwrap();
+
+                        let mut order1 = self.recursive_stingy_ordering(*child1);
+                        let mut order2 = self.recursive_stingy_ordering(*child2);
+
+                        if self.calculate_single_branch_number(child1) >= self.calculate_single_branch_number(child2){
+                            result = order1;
+                            result.append(&mut order2);
+                        }
+                        else {
+                            result = order2;
+                            result.append(&mut order1);
+                        }
+                    },
+                    _=>(),
+                }
+
+                result.push(current_vertex);
+                result
+            }
+
+            /*
            clones the bag of the given vertex
              */
             pub fn get_bag_clone(&self, v : &Vertex) -> VertexBag
@@ -311,37 +353,6 @@ pub mod graph_structures {
 
         }
 
-        /*
-        A structure creating a StingyOrder
-         */
-        pub struct StingyOrder{
-            order : Vec<Vertex>,
-        }
-
-        impl StingyOrder{
-
-            /*
-            Constructs a stingy ordering
-             */
-            pub fn new(ntd : &NiceTreeDecomposition) -> StingyOrder{
-
-                let stingy_order : StingyOrder = StingyOrder{order : vec![]};
-
-                //TODO: let branch_numbers
-
-                stingy_order
-            }
-            /*
-            Calculates the numbers of branches (i.e. the number of join nodes) in the subtree rooted
-            at a node p for all p in V(T) of the tree decomposition
-             */
-            pub fn calculate_branch_number(ntd: &NiceTreeDecomposition) -> HashMap<Vertex, Vertex>
-            {
-                let mut hashmap : HashMap<Vertex, Vertex> = HashMap::new();
-                hashmap
-            }
-
-        }
 
     }
 
@@ -350,6 +361,7 @@ pub mod graph_structures {
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, HashSet};
+    use crate::create_ntd_from_file;
     use crate::graph_structures::graph_structures::adjacency::AdjList;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::Leaf;
@@ -464,5 +476,15 @@ mod tests {
         ]);
 
         assert_eq!(branch_numbers, treedecomp.calculate_branch_numbers_naive());
+    }
+
+    #[test]
+    fn test_stingy_ordering() {
+        let ntd = create_ntd_from_file("example_2.ntd").unwrap();
+        assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14]);
+
+        let ntd = create_ntd_from_file("example.ntd").unwrap();
+        assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10]);
+
     }
 }
