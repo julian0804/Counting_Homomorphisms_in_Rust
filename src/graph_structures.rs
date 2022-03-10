@@ -21,9 +21,24 @@ pub mod graph_structures {
             adjacency_list : adjacency::AdjList,
         }
 
+
+        /*
+        Directed with self-loops
+         */
         impl SimpleGraph{
+
+            /*
+            Creating a new simple Graph
+             */
             pub fn new(number_of_vertices : Vertex, adjacency_list : adjacency::AdjList) -> SimpleGraph{
-                SimpleGraph{number_of_vertices, adjacency_list}
+                SimpleGraph{number_of_vertices , adjacency_list}
+            }
+
+            /*
+            Returns a graph based on a adjacency list
+             */
+            pub fn from(adjacency_list : adjacency::AdjList) -> SimpleGraph{
+                SimpleGraph::new(number_of_vertices : adjacency_list.number_of_vertices() , adjacency_list)
             }
         }
     }
@@ -70,7 +85,7 @@ pub mod graph_structures {
             }
 
             /*
-            returning the number of vertices by searching the maximum key
+            returning the number of vertices by searching the maximum key in the adjacency list, but not how many vertices are in the graph
              */
             pub fn number_of_vertices(&self) -> Vertex
             {
@@ -243,7 +258,7 @@ pub mod graph_structures {
             }
             /*
             Calculates the branch number for each
-            TODO: Make it more effective!
+            TODO: Make it more efficient!
              */
             pub fn calculate_branch_numbers_naive(&self) -> HashMap<Vertex, Vertex>{
                 let mut result: HashMap<Vertex,Vertex> = HashMap::new();
@@ -326,9 +341,6 @@ pub mod graph_structures {
             }
 
         }
-
-
-
 
     }
 
