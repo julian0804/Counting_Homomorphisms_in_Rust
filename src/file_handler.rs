@@ -9,6 +9,7 @@ pub mod file_handler {
     use crate::graph_structures::graph_structures::adjacency::*;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::*;
     use crate::graph_structures::graph_structures::{Vertex, VertexBag};
+    use crate::graph_structures::graph_structures::graph::SimpleGraph;
 
     /*
     Reads file and returns BufReader
@@ -25,7 +26,7 @@ pub mod file_handler {
     Does not check if the tree decomposition is correct
     TODO: make code more solid by catching errors of wrong formatting
      */
-    pub fn create_ntd_from_file<P>(filename: P) -> Option<NiceTreeDecomposition>
+    pub fn create_ntd_from_file<P>(filename : P) -> Option<NiceTreeDecomposition>
         where P: AsRef<Path>
     {
         // These values
@@ -95,12 +96,62 @@ pub mod file_handler {
 
 
     }
+
+    /*
+    Should read file (METIS Format) and returns a graph
+    - directed graphs with possible loops
+    - unweighted
+    https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
+     */
+    pub fn METIS_to_graph<P>(filename : P)-> Option<SimpleGraph>
+        where P: AsRef<Path>
+    {
+
+        let mut number_of_vertices : Vertex = 0;
+        let mut number_of_edges : Vertex = 0;
+        let mut adjacency_list: AdjList = AdjList::new();
+        let mut current_vertex: Vertex = 1;
+
+
+        if let Ok(lines) = read_lines(filename) {
+            for line in lines {
+                let content = line.unwrap();
+
+                // % means comment -> ignore
+                if content.chars().next().unwrap() == '%' {continue; }
+                let mut args = content.split(" ");
+
+                if number_of_vertices == 0 {
+                    number_of_vertices = args.next().unwrap().parse::<Vertex>().unwrap();
+                    number_of_edges = args.next().unwrap().parse::<Vertex>().unwrap();
+                    continue;
+                }
+
+                loop {
+                    if let Some(ver) = args.next() {
+                        let value = ver.parse::<Vertex>().unwrap();
+                        println!("{:?}",value);
+                        adjacency_list.insert_edge(current_vertex, value)
+                    } else {
+                        break;
+                    }
+                }
+
+                current_vertex += 1;
+            }
+
+        }
+
+        Some(SimpleGraph::new(number_of_vertices, adjacency_list))
+    }
+
 }
+
 
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use crate::create_ntd_from_file;
+    use crate::{create_ntd_from_file, file_handler, SimpleGraph};
     use crate::graph_structures::graph_structures::adjacency::AdjList;
     use crate::graph_structures::graph_structures::{Vertex, VertexBag};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
@@ -127,6 +178,22 @@ mod tests {
 
         assert_eq!(create_ntd_from_file("example.ntd").unwrap(),
                    NiceTreeDecomposition::new(example_adjacency_list, example_node_data, 10));
+    }
+
+    #[test]
+    fn test_METIS_to_graph(){
+        let mut adjacency_list = AdjList::new();
+        adjacency_list.insert_edges(vec![
+            (1,5),(1,3),(1,2),
+            (2,1),(2,3),(2,4),
+            (3,5),(3,4),(3,2),(3,1),
+            (4,2),(4,3),(4,6),(4,7),
+            (5,1),(5,3),(5,6),
+            (6,5),(6,4),(6,7),
+            (7,6),(7,4),
+        ]);
+        let graph = SimpleGraph::new(7, adjacency_list);
+        assert_eq!(graph, file_handler::file_handler::METIS_to_graph("tiny_01.graph").unwrap())
     }
 }
 
