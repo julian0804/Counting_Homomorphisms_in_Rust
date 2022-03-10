@@ -1,4 +1,3 @@
-
 pub mod graph_structures {
 
     use std::collections::HashSet;
@@ -7,8 +6,40 @@ pub mod graph_structures {
     pub type Vertex = u32;
     pub type VertexBag = HashSet<Vertex>;
 
+    /*
+    contains the graph structures
+    */
+    pub mod graph{
+        use super::*;
+
+        /*
+        A first simple graph data structure constructed with an adjacency list
+         */
+        pub struct SimpleGraph
+        {
+            number_of_vertices : Vertex,
+            adjacency_list : adjacency::AdjList,
+        }
+
+        impl SimpleGraph{
+            pub fn new(number_of_vertices : Vertex, adjacency_list : adjacency::AdjList) -> SimpleGraph{
+                SimpleGraph{number_of_vertices, adjacency_list}
+            }
+        }
+    }
+
     pub mod adjacency{
         use super::*;
+
+        /*
+        This trait provides simple functionalities every adjacency data structure for graphs
+        should have.
+        TODO: to be done later
+         */
+        pub trait adjacency{
+
+        }
+
         /*
         Implementation of a simple adjacency list for a directed graph with possible loops
         but without multi-edges
@@ -45,6 +76,17 @@ pub mod graph_structures {
             {
                 *self.adjacency_list.keys().max().unwrap_or(&0)
             }
+
+            /*
+            returning a vector of all vertices that has at least one edge going in or out
+             */
+            /*
+            pub fn connected_vertices(&self) -> Vec<&Vertex>{
+                let l1 = HashSet::from(self.adjacency_list.keys().collect());
+                let l2 = HashSet::from(self.reversed_adjacency_list.keys().collect());
+                l1.union(&l2).collect()
+            }
+             */
 
             /*
             Checks if the edge (from, to) exists in this adjacency list
@@ -132,6 +174,7 @@ pub mod graph_structures {
     }
 
     pub mod nice_tree_decomposition{
+        use std::ptr::hash;
         use crate::graph_structures::graph_structures::adjacency::AdjList;
         use super::*;
 
@@ -148,10 +191,6 @@ pub mod graph_structures {
             pub adjacency_list : AdjList,
             pub node_data : HashMap<Vertex, NodeType>,
             pub root : Vertex
-        }
-
-        pub struct StingyOrder{
-            order : Vec<Vertex>,
         }
 
         impl NiceTreeDecomposition {
@@ -183,6 +222,35 @@ pub mod graph_structures {
                     Some(NodeType::Forget(n)) => Some(&n),
                     Some(NodeType::Join(n)) => Some(&n),
                 }
+            }
+
+            /*
+            This function calculates a single branch number for a node
+             by summing up the branch numbers of its children
+             and eventually adding +1
+             */
+            pub fn calculate_single_branch_number(&self, current_node : &Vertex) -> Vertex
+            {
+                if let Some(out_neighbours) = self.adjacency_list.out_neighbours(*current_node)
+                {
+                    let mut sum =  out_neighbours.iter().map(|cur| self.calculate_single_branch_number(cur)).sum();
+                    if let Some(NodeType::Join(_)) = self.get_node_data(&current_node){ sum += 1 }
+                    sum
+                }
+                else {
+                    0
+                }
+            }
+            /*
+            Calculates the branch number for each
+            TODO: Make it more effective!
+             */
+            pub fn calculate_branch_numbers_naive(&self) -> HashMap<Vertex, Vertex>{
+                let mut result: HashMap<Vertex,Vertex> = HashMap::new();
+                for j in 1..(self.adjacency_list.number_of_vertices() + 1){
+                    result.insert(j, self.calculate_single_branch_number(&j));
+                }
+                result
             }
 
             /*
@@ -218,7 +286,47 @@ pub mod graph_structures {
                 union
             }
 
+            /*
+            Returns the root of the nice tree decomposition
+             */
+            pub fn get_root(&self) -> Vertex{
+                self.root
+            }
+
         }
+
+        /*
+        A structure creating a StingyOrder
+         */
+        pub struct StingyOrder{
+            order : Vec<Vertex>,
+        }
+
+        impl StingyOrder{
+
+            /*
+            Constructs a stingy ordering
+             */
+            pub fn new(ntd : &NiceTreeDecomposition) -> StingyOrder{
+
+                let stingy_order : StingyOrder = StingyOrder{order : vec![]};
+
+                //TODO: let branch_numbers
+
+                stingy_order
+            }
+            /*
+            Calculates the numbers of branches (i.e. the number of join nodes) in the subtree rooted
+            at a node p for all p in V(T) of the tree decomposition
+             */
+            pub fn calculate_branch_number(ntd: &NiceTreeDecomposition) -> HashMap<Vertex, Vertex>
+            {
+                let mut hashmap : HashMap<Vertex, Vertex> = HashMap::new();
+                hashmap
+            }
+
+        }
+
 
 
 
@@ -278,6 +386,7 @@ mod tests {
     #[test]
     fn tree_decomposition()
     {
+        // Uses the tree from github
         let mut node_data: HashMap<Vertex, NodeType> = HashMap::new();
         node_data.insert(1, NodeType::Leaf(VertexBag::from([1])));
         node_data.insert(2, NodeType::Introduce(VertexBag::from([1,2])));
@@ -320,5 +429,27 @@ mod tests {
 
         assert_eq!(treedecomp.get_union(&7), VertexBag::from([1,2,3]));
         assert_eq!(treedecomp.get_union(&10), VertexBag::from([1,2,3,4]));
+
+        // Tests for calculating branch number
+        assert_eq!(1, treedecomp.calculate_single_branch_number(&7));
+        assert_eq!(1, treedecomp.calculate_single_branch_number(&8));
+        assert_eq!(0, treedecomp.calculate_single_branch_number(&3));
+        assert_eq!(0, treedecomp.calculate_single_branch_number(&4));
+
+        // Tests for calculating all branch numbers
+        let branch_numbers = HashMap::from([
+            (1,0),
+            (2,0),
+            (3,0),
+            (4,0),
+            (5,0),
+            (6,0),
+            (7,1),
+            (8,1),
+            (9,1),
+            (10,1),
+        ]);
+
+        assert_eq!(branch_numbers, treedecomp.calculate_branch_numbers_naive());
     }
 }
