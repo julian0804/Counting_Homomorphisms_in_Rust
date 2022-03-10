@@ -15,6 +15,7 @@ pub mod graph_structures {
         /*
         A first simple graph data structure constructed with an adjacency list
          */
+        #[derive(Debug, PartialEq)]
         pub struct SimpleGraph
         {
             number_of_vertices : Vertex,
@@ -38,7 +39,7 @@ pub mod graph_structures {
             Returns a graph based on a adjacency list
              */
             pub fn from(adjacency_list : adjacency::AdjList) -> SimpleGraph{
-                SimpleGraph::new(number_of_vertices : adjacency_list.number_of_vertices() , adjacency_list)
+                SimpleGraph::new(adjacency_list.number_of_vertices() , adjacency_list)
             }
         }
     }
