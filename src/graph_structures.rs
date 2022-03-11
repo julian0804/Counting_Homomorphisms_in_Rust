@@ -283,6 +283,7 @@ pub mod graph_structures {
             {
                 let mut result: Vec<Vertex>= Vec::new();
 
+                // compares degree of nodes
                 match self.adjacency_list.out_degree(current_vertex){
                     1 => {
                         let child = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(0).unwrap();
