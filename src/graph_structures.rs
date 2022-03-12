@@ -18,8 +18,8 @@ pub mod graph_structures {
         #[derive(Debug, PartialEq)]
         pub struct SimpleGraph
         {
-            number_of_vertices : Vertex,
-            adjacency_list : adjacency::AdjList,
+            pub number_of_vertices : Vertex,
+            pub adjacency_list : adjacency::AdjList,
         }
 
 
@@ -61,6 +61,12 @@ pub mod graph_structures {
         but without multi-edges
 
         Vertices: 1 ... N
+
+        TODO: This structure is currently only needed by the tree decomposition function
+        TODO: Do some better tree structure with more checking...
+
+        TODO: create checker
+
         */
         #[derive(Debug,PartialEq)]
         pub struct AdjList{
@@ -243,7 +249,7 @@ pub mod graph_structures {
             /*
             This function calculates a single branch number for a node
              by summing up the branch numbers of its children
-             and eventually adding +1
+             and eventually adding +1 for join nodes
              */
             pub fn calculate_single_branch_number(&self, current_node : &Vertex) -> Vertex
             {
