@@ -493,10 +493,10 @@ mod tests {
 
     #[test]
     fn test_stingy_ordering() {
-        let ntd = create_ntd_from_file("example_2.ntd").unwrap();
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14]);
 
-        let ntd = create_ntd_from_file("example.ntd").unwrap();
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
         assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10]);
 
     }

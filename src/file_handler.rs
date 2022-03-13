@@ -192,7 +192,7 @@ mod tests {
             (10 , Forget(VertexBag::from([]))),
         ]);
 
-        assert_eq!(create_ntd_from_file("example.ntd").unwrap(),
+        assert_eq!(create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap(),
                    NiceTreeDecomposition::new(example_adjacency_list, example_node_data, 10));
     }
 
@@ -208,7 +208,7 @@ mod tests {
             (5, 4), (5, 3), (5, 6),
             (6, 5), (6, 3)];
 
-        let g = file_handler::file_handler::metis_to_graph("tiny_01.graph").unwrap();
+        let g = file_handler::file_handler::metis_to_graph("data/metis_graphs/tiny_01.graph").unwrap();
 
         assert_eq!(g.node_count(), 7);
         assert_eq!(g.edge_count(), 11);
