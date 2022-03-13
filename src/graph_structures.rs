@@ -14,6 +14,7 @@ pub mod graph_structures {
     pub mod new_ntd{
         use core::panicking::panic;
         use std::collections::{HashMap, HashSet};
+        use std::env::current_exe;
         use std::process::Child;
         use petgraph::matrix_graph::NodeIndex;
 
@@ -28,6 +29,9 @@ pub mod graph_structures {
             Join
         }
 
+        /*
+        This structure contains data of a single node
+         */
         pub struct NodeData{
             node_type : NodeType,
             bag : Bag,
@@ -56,15 +60,14 @@ pub mod graph_structures {
 
         }
 
-
         /*
         This structure contains the data of a nice tree decomposition
          */
         pub struct TreeAdjacency{
             number_of_nodes : TreeNode,
             node_data : HashMap<TreeNode, NodeData>,
-            children : HashMap<TreeNode, Vec<TreeNode>>,
-            parents : HashMap<TreeNode, TreeNode>
+            children_list: HashMap<TreeNode, Vec<TreeNode>>,
+            parents_list: HashMap<TreeNode, TreeNode>
         }
 
         impl TreeAdjacency{
@@ -73,11 +76,14 @@ pub mod graph_structures {
             Returns an empty TreeAdjacency Structure with given node size
              */
             pub fn new(number_of_nodes : u64) -> TreeAdjacency{
+
+                if number_of_nodes == 0{ panic!("Tree needs at least one node"); }
+
                 TreeAdjacency{
                     number_of_nodes,
                     node_data : HashMap::new(),
-                    children : HashMap::new(),
-                    parents : HashMap::new(),
+                    children_list: HashMap::new(),
+                    parents_list: HashMap::new(),
                 }
             }
 
@@ -91,15 +97,15 @@ pub mod graph_structures {
             /*
             returns the children of a given node
              */
-            pub fn children_of(&self, node : TreeNode) -> Option<&Vec<TreeNode>>{
-                self.children.get(&node)
+            pub fn children(&self, node : TreeNode) -> Option<&Vec<TreeNode>>{
+                self.children_list.get(&node)
             }
 
             /*
             counts the number of children of a given node
              */
             pub fn children_count(&self, node : TreeNode) -> TreeNode{
-                (if let Some(i) = self.children_of(node) {
+                (if let Some(i) = self.children(node) {
                     i.len()
                 } else {
                     0
@@ -110,7 +116,7 @@ pub mod graph_structures {
             returns the parent of a given node
              */
             pub fn parent(&self, node:TreeNode) -> Option<&TreeNode> {
-                self.parents.get(&node)
+                self.parents_list.get(&node)
             }
 
 
@@ -125,7 +131,6 @@ pub mod graph_structures {
                     false
                 }
             }
-
 
             /*
             adds the parent-child-relation ship if possible:
@@ -142,7 +147,7 @@ pub mod graph_structures {
                 match self.node_data(parent).node_type{
                     NodeType::Leaf => {panic!("{:?} could not have children; its a leaf!", parent)},
                     NodeType::Introduce | NodeType::Forget => {
-                        if self.children_of(parent) != None{
+                        if self.children(parent) != None{
                             panic!("{:?} already has a child!\
                              Introduce & Forget Nodes can have only one child!", parent);
                         }
@@ -158,26 +163,36 @@ pub mod graph_structures {
                 // Checks if the given nodes do not already have the child-parent relationship
                 if !self.is_child_of(child, parent){
                     // sets the parent
-                    self.parents.insert(child, parent);
+                    self.parents_list.insert(child, parent);
 
                     // inserts child
-                    if let Some(children) = self.children.get_mut(&parent){
+                    if let Some(children) = self.children_list.get_mut(&parent){
                         children.push(child);
                     }else {
-                        self.children.insert(parent, vec![child]);
+                        self.children_list.insert(parent, vec![child]);
                     }
 
                 }
 
             }
 
+            /*
+            calculates the root of the tree
+             */
+            pub fn root(&self) -> TreeNode{
+                let mut current_node : TreeNode = 0; // arbitrary taken node with index = 0
+                loop {
+                    if let Some(parent) = self.parent(current_node)
+                    {
+                        current_node = *parent;
+                    }
+                    else { break }
+                }
+                current_node
+            }
+
 
         }
-
-
-
-
-
     }
 
 
