@@ -1,3 +1,5 @@
+
+/*
 pub mod counting_graph_homomorphisms{
     use std::collections::{HashMap, HashSet};
     use std::iter::Map;
@@ -57,6 +59,7 @@ pub mod counting_graph_homomorphisms{
 
     1. Use Hashmaps for representing the mappings
      */
+    /*
     pub fn diaz(from_graph : SimpleGraph, ntd : NiceTreeDecomposition, to_graph : SimpleGraph) -> u64
     {
         let stingy_order = ntd.stingy_ordering();
@@ -93,7 +96,10 @@ pub mod counting_graph_homomorphisms{
         1
     }
 
+     */
+
 }
+ */
 
 #[cfg(test)]
 mod tests{
