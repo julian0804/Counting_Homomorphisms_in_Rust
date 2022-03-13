@@ -1,5 +1,6 @@
 use super::lib::*;
 
+/*
 
 pub mod file_handler {
     use std::collections::{HashMap, HashSet};
@@ -8,11 +9,6 @@ pub mod file_handler {
     use std::io::{self, BufRead};
     use std::path::Path;
     use petgraph::graph::NodeIndex;
-    use crate::graph_structures::graph_structures::adjacency::*;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::*;
-    use crate::graph_structures::graph_structures::{Vertex, VertexBag};
-
-
     use petgraph::matrix_graph::*;
     use petgraph::Undirected;
 
@@ -219,3 +215,4 @@ mod tests {
     }
 }
 
+*/
