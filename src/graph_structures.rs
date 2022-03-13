@@ -3,8 +3,12 @@ pub mod graph_structures {
     use std::collections::HashSet;
     use std::collections::HashMap;
 
-    pub type Vertex = u32;
+    pub type Vertex = u64;
+    pub type Edge = (Vertex, Vertex);
+
     pub type VertexBag = HashSet<Vertex>;
+
+
 
     /*
     contains the graph structures
@@ -207,6 +211,8 @@ pub mod graph_structures {
             Forget(VertexBag),
             Join(VertexBag)
         }
+
+
 
         #[derive(Debug, PartialEq)]
         pub struct NiceTreeDecomposition{
