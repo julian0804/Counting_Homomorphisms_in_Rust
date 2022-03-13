@@ -156,7 +156,6 @@ pub mod file_handler {
             }
 
         }
-
         Some(graph)
     }
 
@@ -166,7 +165,9 @@ pub mod file_handler {
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use crate::{create_ntd_from_file, file_handler, SimpleGraph};
+    use petgraph::graph::NodeIndex;
+    use petgraph::matrix_graph::MatrixGraph;
+    use crate::{create_ntd_from_file, file_handler, metis_to_graph};
     use crate::graph_structures::graph_structures::adjacency::AdjList;
     use crate::graph_structures::graph_structures::{Vertex, VertexBag};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
@@ -197,18 +198,23 @@ mod tests {
 
     #[test]
     fn test_METIS_to_graph(){
-        let mut adjacency_list = AdjList::new();
-        adjacency_list.insert_edges(vec![
-            (1,5),(1,3),(1,2),
-            (2,1),(2,3),(2,4),
-            (3,5),(3,4),(3,2),(3,1),
-            (4,2),(4,3),(4,6),(4,7),
-            (5,1),(5,3),(5,6),
-            (6,5),(6,4),(6,7),
-            (7,6),(7,4),
-        ]);
-        let graph = SimpleGraph::new(7, adjacency_list);
-        assert_eq!(graph, file_handler::file_handler::metis_to_graph("tiny_01.graph").unwrap())
+
+        let edges = vec![
+            (0, 4), (0, 2), (0, 1),
+            (1, 0), (1, 2), (1, 3),
+            (2, 4), (2, 3), (2, 1), (2, 0),
+            (3, 1), (3, 2), (3, 5), (3, 6),
+            (4, 0), (4, 2), (4, 5),
+            (5, 4), (5, 3), (5, 6),
+            (6, 5), (6, 3)];
+
+        let g = file_handler::file_handler::metis_to_graph("tiny_01.graph").unwrap();
+
+        assert_eq!(g.node_count(), 7);
+        assert_eq!(g.edge_count(), 11);
+        for (a,b) in edges{
+            assert!(g.has_edge(NodeIndex::new(a), NodeIndex::new(b)));
+        }
     }
 }
 
