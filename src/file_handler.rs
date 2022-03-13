@@ -1,15 +1,20 @@
 use super::lib::*;
 
+
 pub mod file_handler {
     use std::collections::{HashMap, HashSet};
     use std::error::Error;
     use std::fs::File;
     use std::io::{self, BufRead};
     use std::path::Path;
+    use petgraph::graph::NodeIndex;
     use crate::graph_structures::graph_structures::adjacency::*;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::*;
     use crate::graph_structures::graph_structures::{Vertex, VertexBag};
-    use crate::graph_structures::graph_structures::graph::SimpleGraph;
+
+
+    use petgraph::matrix_graph::*;
+    use petgraph::Undirected;
 
     /*
     Reads file and returns BufReader
@@ -66,10 +71,10 @@ pub mod file_handler {
                         };
 
                         match node_type {
-                            Some("l") => { node_data.insert(nr, NodeType::Leaf(constructed_bag())); },
-                            Some("i") => { node_data.insert(nr, NodeType::Introduce(constructed_bag())); },
-                            Some("f") => { node_data.insert(nr, NodeType::Forget(constructed_bag())); },
-                            Some("j") => { node_data.insert(nr, NodeType::Join(constructed_bag())); },
+                            Some("l") => { node_data.insert(nr.into(), NodeType::Leaf(constructed_bag())); },
+                            Some("i") => { node_data.insert(nr.into(), NodeType::Introduce(constructed_bag())); },
+                            Some("f") => { node_data.insert(nr.into(), NodeType::Forget(constructed_bag())); },
+                            Some("j") => { node_data.insert(nr.into(), NodeType::Join(constructed_bag())); },
                             _ => {}
                         }
                     },
@@ -98,19 +103,24 @@ pub mod file_handler {
     }
 
     /*
-    Should read file (METIS Format) and returns a graph
+    Should read file (METIS Format) and returns a MatrixGraph of the petgraph package
     - directed graphs with possible loops
     - unweighted
+
+    - Node-Indies will be subtracted by one (1,..,N -> 0,..,N-1)
+
+
     https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
      */
-    pub fn METIS_to_graph<P>(filename : P)-> Option<SimpleGraph>
+    pub fn metis_to_graph<P>(filename : P) -> Option<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>
         where P: AsRef<Path>
     {
 
+        let mut graph = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
         let mut number_of_vertices : Vertex = 0;
         let mut number_of_edges : Vertex = 0;
-        let mut adjacency_list: AdjList = AdjList::new();
-        let mut current_vertex: Vertex = 1;
+        let mut current_vertex : usize = 0;
 
 
         if let Ok(lines) = read_lines(filename) {
@@ -124,14 +134,19 @@ pub mod file_handler {
                 if number_of_vertices == 0 {
                     number_of_vertices = args.next().unwrap().parse::<Vertex>().unwrap();
                     number_of_edges = args.next().unwrap().parse::<Vertex>().unwrap();
+
+                    for i in 1..(number_of_vertices + 1){
+                        let j = graph.add_node(());
+                    }
                     continue;
                 }
 
                 loop {
                     if let Some(ver) = args.next() {
-                        let value = ver.parse::<Vertex>().unwrap();
-                        println!("{:?}",value);
-                        adjacency_list.insert_edge(current_vertex, value)
+                        let value = ver.parse::<usize>().unwrap();
+                        if !graph.has_edge(NodeIndex::new(current_vertex), NodeIndex::new(value - 1)) {
+                            graph.add_edge(NodeIndex::new(current_vertex), NodeIndex::new(value - 1), ());
+                        }
                     } else {
                         break;
                     }
@@ -142,7 +157,7 @@ pub mod file_handler {
 
         }
 
-        Some(SimpleGraph::new(number_of_vertices, adjacency_list))
+        Some(graph)
     }
 
 }
@@ -193,7 +208,7 @@ mod tests {
             (7,6),(7,4),
         ]);
         let graph = SimpleGraph::new(7, adjacency_list);
-        assert_eq!(graph, file_handler::file_handler::METIS_to_graph("tiny_01.graph").unwrap())
+        assert_eq!(graph, file_handler::file_handler::metis_to_graph("tiny_01.graph").unwrap())
     }
 }
 
