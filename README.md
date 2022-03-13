@@ -1,5 +1,9 @@
 # Counting Homomorphisms in Rust
 
+## input Format for graphs
+
+
+
 ## Input Format for NTD
 
 Here is an example for the input format, representing the following
