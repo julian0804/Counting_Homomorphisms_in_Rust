@@ -1,5 +1,7 @@
 pub mod graph_structures {
 
+    use petgraph::*;
+
     use std::collections::HashSet;
     use std::collections::HashMap;
 
@@ -9,57 +11,64 @@ pub mod graph_structures {
     pub type VertexBag = HashSet<Vertex>;
 
 
+    pub mod new_ntd{
 
-    /*
-    contains the graph structures
-    */
-    pub mod graph{
-        use super::*;
+        use std::collections::{HashMap, HashSet};
+        use petgraph::matrix_graph::NodeIndex;
 
-        /*
-        A first simple graph data structure constructed with an adjacency list
-         */
-        #[derive(Debug, PartialEq)]
-        pub struct SimpleGraph
-        {
-            pub number_of_vertices : Vertex,
-            pub adjacency_list : adjacency::AdjList,
+        type TreeNode = u64;
+        type Vertex = NodeIndex;
+        type Bag = HashSet<Vertex>;
+
+        enum NodeType{
+            Leaf,
+            Introduce,
+            Forget,
+            Join
+        }
+
+        pub struct NodeData{
+            node_type : NodeType,
+            bag : Bag,
         }
 
 
-        /*
-        Directed with self-loops
-         */
-        impl SimpleGraph{
-
+        impl NodeData{
             /*
-            Creating a new simple Graph
-             */
-            pub fn new(number_of_vertices : Vertex, adjacency_list : adjacency::AdjList) -> SimpleGraph{
-                SimpleGraph{number_of_vertices , adjacency_list}
+            Simple constructor for NodeData
+            */
+            pub fn new(node_type : NodeType, bag : Bag) -> NodeData{
+                NodeData{
+                    node_type,
+                    bag
+                }
             }
 
             /*
-            Returns a graph based on a adjacency list
+            Returns a reference to the Node Type of this NodeData
              */
-            pub fn from(adjacency_list : adjacency::AdjList) -> SimpleGraph{
-                SimpleGraph::new(adjacency_list.number_of_vertices() , adjacency_list)
-            }
+            pub fn node_type(&self) -> &NodeType{ &self.node_type }
+
+            /*
+            Returns a reference to the bag
+             */
+            pub fn bag(&self) -> &Bag{ &self.bag }
+
         }
+
+
+        pub struct TreeAdjacency<'a>{
+            number_of_nodes : u64,
+            node_data : HashMap<TreeNode, NodeData>,
+            children : HashMap<TreeNode, Vec<TreeNode>>,
+            parent : TreeNode
+        }
+
     }
+
 
     pub mod adjacency{
         use super::*;
-
-        /*
-        This trait provides simple functionalities every adjacency data structure for graphs
-        should have.
-        TODO: to be done later
-         */
-        pub trait adjacency{
-
-        }
-
         /*
         Implementation of a simple adjacency list for a directed graph with possible loops
         but without multi-edges
