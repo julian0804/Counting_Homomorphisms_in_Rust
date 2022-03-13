@@ -1,3 +1,5 @@
+extern crate core;
+
 mod lib;
 mod file_handler;
 mod graph_structures;

@@ -12,15 +12,16 @@ pub mod graph_structures {
 
 
     pub mod new_ntd{
-
+        use core::panicking::panic;
         use std::collections::{HashMap, HashSet};
+        use std::process::Child;
         use petgraph::matrix_graph::NodeIndex;
 
         type TreeNode = u64;
         type Vertex = NodeIndex;
         type Bag = HashSet<Vertex>;
 
-        enum NodeType{
+        pub enum NodeType{
             Leaf,
             Introduce,
             Forget,
@@ -31,7 +32,6 @@ pub mod graph_structures {
             node_type : NodeType,
             bag : Bag,
         }
-
 
         impl NodeData{
             /*
@@ -57,12 +57,126 @@ pub mod graph_structures {
         }
 
 
-        pub struct TreeAdjacency<'a>{
-            number_of_nodes : u64,
+        /*
+        This structure contains the data of a nice tree decomposition
+         */
+        pub struct TreeAdjacency{
+            number_of_nodes : TreeNode,
             node_data : HashMap<TreeNode, NodeData>,
             children : HashMap<TreeNode, Vec<TreeNode>>,
-            parent : TreeNode
+            parents : HashMap<TreeNode, TreeNode>
         }
+
+        impl TreeAdjacency{
+
+            /*
+            Returns an empty TreeAdjacency Structure with given node size
+             */
+            pub fn new(number_of_nodes : u64) -> TreeAdjacency{
+                TreeAdjacency{
+                    number_of_nodes,
+                    node_data : HashMap::new(),
+                    children : HashMap::new(),
+                    parents : HashMap::new(),
+                }
+            }
+
+            /*
+            Returns the number of nodes of the tree decomposition
+             */
+            pub fn node_count(&self) -> TreeNode{
+                self.number_of_nodes
+            }
+
+            /*
+            returns the children of a given node
+             */
+            pub fn children_of(&self, node : TreeNode) -> Option<&Vec<TreeNode>>{
+                self.children.get(&node)
+            }
+
+            /*
+            counts the number of children of a given node
+             */
+            pub fn children_count(&self, node : TreeNode) -> TreeNode{
+                (if let Some(i) = self.children_of(node) {
+                    i.len()
+                } else {
+                    0
+                }) as TreeNode
+            }
+
+            /*
+            returns the parent of a given node
+             */
+            pub fn parent(&self, node:TreeNode) -> Option<&TreeNode> {
+                self.parents.get(&node)
+            }
+
+
+            /*
+            Checks if child node relation ship
+             */
+            pub fn is_child_of(&self, child : TreeNode, parent : TreeNode) -> bool{
+                if let Some(p) = self.parent(child){
+                    (parent == *p)
+                }
+                else{
+                    false
+                }
+            }
+
+
+            /*
+            adds the parent-child-relation ship if possible:
+            - Only one parent
+            - Number of parents depend on the kind of node
+             */
+            pub fn set_child(&mut self, parent : TreeNode, child : TreeNode){
+
+                // Checks if child already has a parent
+                if self.parent(child) != None{
+                    panic!("Node {:?} already has a parent", child);
+                }
+                // Checks if node_types have been considered correctly
+                match self.node_data(parent).node_type{
+                    NodeType::Leaf => {panic!("{:?} could not have children; its a leaf!", parent)},
+                    NodeType::Introduce | NodeType::Forget => {
+                        if self.children_of(parent) != None{
+                            panic!("{:?} already has a child!\
+                             Introduce & Forget Nodes can have only one child!", parent);
+                        }
+                    },
+                    NodeType::Join => {
+                        if self.children_count(parent) > 1{
+                            panic!("{:?} already has two ore more childs. \
+                            Join Nodes can have a maximum of 2 children", parent);
+                        }
+                    },
+                }
+
+                // Checks if the given nodes do not already have the child-parent relationship
+                if !self.is_child_of(child, parent){
+                    // sets the parent
+                    self.parents.insert(child, parent);
+
+                    // inserts child
+                    if let Some(children) = self.children.get_mut(&parent){
+                        children.push(child);
+                    }else {
+                        self.children.insert(parent, vec![child]);
+                    }
+
+                }
+
+            }
+
+
+        }
+
+
+
+
 
     }
 

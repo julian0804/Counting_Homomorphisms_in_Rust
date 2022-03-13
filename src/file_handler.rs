@@ -109,6 +109,7 @@ pub mod file_handler {
 
     - Node-Indies will be subtracted by one (1,..,N -> 0,..,N-1)
 
+    TODO: Make it more stable!
 
     https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
      */
