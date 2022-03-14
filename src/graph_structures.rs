@@ -216,7 +216,7 @@ pub mod graph_structures {
          */
         #[derive(PartialEq, Eq, Debug)]
         pub struct NiceTreeDecomposition{
-            tree_structure : TreeStructure,
+            pub tree_structure : TreeStructure,
         }
 
         impl NiceTreeDecomposition{
@@ -309,35 +309,15 @@ pub mod graph_structures {
 mod tests {
     use std::collections::{HashMap, HashSet};
     use petgraph::matrix_graph::NodeIndex;
+    use crate::file_handler::file_handler::create_ntd_from_file;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeData, NodeType, TreeStructure};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::{Forget, Introduce, Join, Leaf};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{Vertex, Bag};
 
     fn tree_adjacency_example_one() -> TreeStructure {
         let mut ta = TreeStructure::new(10);
-        ta.set_node_data(0, Leaf, Bag::from([Vertex::new(1)]));
-        ta.set_node_data(1,
-                         Introduce, Bag::from([Vertex::new(1), Vertex::new(2)]));
-        ta.set_node_data(2,
-                         Forget, Bag::from([Vertex::new(2)]));
-        ta.set_node_data(3, Leaf, Bag::from([Vertex::new(2)]));
-        ta.set_node_data(4, Introduce, Bag::from([Vertex::new(1), Vertex::new(1)]));
-        ta.set_node_data(5,Forget, Bag::from([Vertex::new(2)]));
-        ta.set_node_data(6, Join, Bag::from([Vertex::new(2)]));
-        ta.set_node_data(7, Introduce, Bag::from([Vertex::new(2), Vertex::new(4)]));
-        ta.set_node_data(8, Forget, Bag::from([Vertex::new(4)]));
-        ta.set_node_data(9, Forget, Bag::from([]));
-
-        ta.set_child(9,8);
-        ta.set_child(8,7);
-        ta.set_child(7,6);
-        ta.set_child(6,2);
-        ta.set_child(2,1);
-        ta.set_child(1,0);
-        ta.set_child(6,5);
-        ta.set_child(5,4);
-        ta.set_child(4,3);
-
+        let mut ntd = create_ntd_from_file("data/nice_tree_decompositions/example.ntd");
+        ta = ntd.unwrap().tree_structure;
         ta
     }
 
@@ -347,11 +327,9 @@ mod tests {
         let test_ntd = NiceTreeDecomposition::new(test_object);
         assert_eq!(test_ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9]);
 
-        // with example 2
-        /*
         let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         assert_eq!(ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
-         */
+
     }
 
     #[test]
@@ -390,11 +368,11 @@ mod tests {
         assert_eq!(test_object.root(), 9);
 
         // test bag
-        assert_eq!(test_object.bag(0), Some(&HashSet::from([NodeIndex::new(1)])));
-        assert_eq!(test_object.bag(7), Some(&HashSet::from([NodeIndex::new(2), NodeIndex::new(4)])));
-        assert_eq!(test_object.bag(6), Some(&HashSet::from([NodeIndex::new(2)])));
+        assert_eq!(test_object.bag(0), Some(&HashSet::from([NodeIndex::new(0)])));
+        assert_eq!(test_object.bag(7), Some(&HashSet::from([NodeIndex::new(1), NodeIndex::new(3)])));
+        assert_eq!(test_object.bag(6), Some(&HashSet::from([NodeIndex::new(1)])));
         assert_eq!(test_object.bag(9), Some(&HashSet::from([])));
-        assert_eq!(test_object.bag(8), Some(&HashSet::from([NodeIndex::new(4)])));
+        assert_eq!(test_object.bag(8), Some(&HashSet::from([NodeIndex::new(3)])));
 
         // test node_type()
         assert_eq!(test_object.node_type(0), Some(&NodeType::Leaf));
