@@ -16,17 +16,18 @@ pub mod diaz {
     /*
     a struct containing all infos about the dynamic program
      */
-    pub struct DPData {
+    pub struct DPData<'a>{
         table : HashMap<TreeNode, HashMap<Mapping, u64>>,
-        from_graph : MatrixGraph<(),(), Undirected>,
-        to_graph : MatrixGraph<(),(), Undirected>,
+        from_graph : &'a MatrixGraph<(),(), Undirected>,
+        to_graph : &'a MatrixGraph<(),(), Undirected>,
     }
 
 
 
-    impl DPData {
-        pub fn new(from_graph : MatrixGraph<(),(), Undirected>, to_graph : MatrixGraph<(),(), Undirected>) -> DPData {
-            DPData { table : HashMap::new(), from_graph, to_graph }
+    impl<'a> DPData<'a>{
+
+        pub fn new<'b>(from_graph : &'b MatrixGraph<(),(), Undirected>, to_graph : &'b MatrixGraph<(),(), Undirected>) -> DPData<'b> {
+            DPData { table : HashMap::new(),  from_graph, to_graph }
         }
 
         /*
@@ -48,6 +49,8 @@ pub mod diaz {
                 self.table.insert(node, HashMap::from([(mapping, value)]));
             }
         }
+
+
     }
 
     /*
@@ -56,31 +59,30 @@ pub mod diaz {
 
     1. Use Hashmaps for representing the mappings
      */
-    /*
-    pub fn diaz(from_graph : MatrixGraph<(),(), Undirected>, ntd : NiceTreeDecomposition, to_graph : MatrixGraph<(),(), Undirected>) -> u64
+    pub fn diaz(from_graph : &MatrixGraph<(),(), Undirected>, ntd : NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> u64
     {
         let stingy_order = ntd.stingy_ordering();
 
         let mut table = DPData::new(from_graph, to_graph);
 
         for node in stingy_order{
-            match ntd.get_node_data(&node){
-                Some(NodeType::Leaf(..)) => {
-                    let unique_vertex = ntd.get_bag(&node).unwrap().iter().next().unwrap();
+            match ntd.node_type(node){
+                Some(Leaf) => {
+                    let unique_vertex = ntd.bag(node).unwrap().iter().next().unwrap();
                     // be carefully, we return the number of vertices
 
                     // inserts the mapping (unique_vertex -> aim_vertex) for each
                     // aim_vertex in the aim graph
-                    for aim_vertex in 1..to_graph.adjacency_list.number_of_vertices(){
+                    for aim_vertex in 0..to_graph.node_count(){
                         table.set(node, aim_vertex as Mapping, 1);
                     }
                 }
-                Some(NodeType::Introduce(..)) => {
+                Some(Introduce) => {
                 }
-                Some(NodeType::Forget(..)) => {
+                Some(Forget) => {
 
                 }
-                Some(NodeType::Join(..)) => {
+                Some(Join) => {
 
                 }
                 None => {
@@ -88,12 +90,9 @@ pub mod diaz {
                 }
             }
         }
-
-
         1
     }
 
- */
 }
 
 
