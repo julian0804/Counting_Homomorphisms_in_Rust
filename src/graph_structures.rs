@@ -270,8 +270,8 @@ pub mod graph_structures {
                     Some(NodeType::Join) => {
                         if let Some(children) = self.tree_structure.children(current_node){
 
-                            let mut child1 = children.get(0).unwrap();
-                            let mut child2 = children.get(1).unwrap();
+                            let child1 = children.get(0).unwrap();
+                            let child2 = children.get(1).unwrap();
 
                             let (mut so1, bn1) = self.recursive_stingy_ordering(*child1);
                             let (mut so2, bn2) = self.recursive_stingy_ordering(*child2);

@@ -134,8 +134,8 @@ pub mod file_handler {
                     number_of_vertices = args.next().unwrap().parse::<usize>().unwrap();
                     number_of_edges = args.next().unwrap().parse::<usize>().unwrap();
 
-                    for i in 1..(number_of_vertices + 1){
-                        let j = graph.add_node(());
+                    for _ in 1..(number_of_vertices + 1){
+                        graph.add_node(());
                     }
                     continue;
                 }

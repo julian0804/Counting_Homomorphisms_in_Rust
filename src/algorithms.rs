@@ -1,14 +1,11 @@
 
-/*
-pub mod counting_graph_homomorphisms{
-    use std::collections::{HashMap, HashSet};
-    use std::iter::Map;
-    use crate::{NiceTreeDecomposition, SimpleGraph};
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType;
-    use crate::graph_structures::graph_structures::Vertex;
+pub mod diaz {
 
-    // Define the type of a basically mapping
-    //type Mapping = HashMap<Vertex, Vertex>;
+    use std::collections::HashMap;
+    use petgraph::matrix_graph::MatrixGraph;
+    use petgraph::Undirected;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode};
+
 
     /*
     A mapping based on the representation in
@@ -16,26 +13,26 @@ pub mod counting_graph_homomorphisms{
      */
     type Mapping = u64;
 
-
-
     /*
     a struct containing all infos about the dynamic program
      */
-    struct DPInfo {
-        table : HashMap<Vertex, HashMap<Mapping, u64>>,
-        from_graph : SimpleGraph,
-        to_graph : SimpleGraph,
+    struct DPData {
+        table : HashMap<TreeNode, HashMap<Mapping, u64>>,
+        from_graph : MatrixGraph<(),(), Undirected>,
+        to_graph : MatrixGraph<(),(), Undirected>,
     }
 
-    impl DPInfo {
-        pub fn new(from_graph : SimpleGraph, to_graph : SimpleGraph) -> DPInfo {
-            DPInfo { table : HashMap::new(), from_graph, to_graph }
+
+
+    impl DPData {
+        pub fn new(from_graph : SimpleGraph, to_graph : SimpleGraph) -> DPData {
+            DPData { table : HashMap::new(), from_graph, to_graph }
         }
 
         /*
         Gets the entry for a given vertex and mapping
          */
-        pub fn get(&self, node : &Vertex, mapping : &Mapping) -> Option<&u64> {
+        pub fn get(&self, node : &TreeNode, mapping : &Mapping) -> Option<&u64> {
             if let Some(mappings) = self.table.get(node){ mappings.get(mapping) }
             else { None }
         }
@@ -43,7 +40,7 @@ pub mod counting_graph_homomorphisms{
         /*
         sets the entry for a given vertex
          */
-        pub fn set(&mut self, node : Vertex, mapping : Mapping, value : u64){
+        pub fn set(&mut self, node : TreeNode, mapping : Mapping, value : u64){
             if let Some(mappings) = self.table.get_mut(&node){
                 mappings.insert(mapping,value);
             }
@@ -59,12 +56,12 @@ pub mod counting_graph_homomorphisms{
 
     1. Use Hashmaps for representing the mappings
      */
-    /*
+
     pub fn diaz(from_graph : SimpleGraph, ntd : NiceTreeDecomposition, to_graph : SimpleGraph) -> u64
     {
         let stingy_order = ntd.stingy_ordering();
 
-        let mut table = DPInfo::new(from_graph, to_graph);
+        let mut table = DPData::new(from_graph, to_graph);
 
         for node in stingy_order{
             match ntd.get_node_data(&node){
@@ -96,16 +93,14 @@ pub mod counting_graph_homomorphisms{
         1
     }
 
-     */
 
 }
- */
 
 #[cfg(test)]
 mod tests{
 
     #[test]
-    fn test_dpinfo(){
+    fn test_dpdata(){
 
     }
 
