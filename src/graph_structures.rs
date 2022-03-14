@@ -4,18 +4,12 @@ pub mod graph_structures {
     use std::collections::HashSet;
     use std::collections::HashMap;
 
-    pub type Vertex = u64;
-    pub type Edge = (Vertex, Vertex);
-
-    pub type VertexBag = HashSet<Vertex>;
-
-
     pub mod nice_tree_decomposition {
         use std::cmp::max;
         use std::collections::{HashMap, HashSet};
         use petgraph::matrix_graph::NodeIndex;
 
-        type TreeNode = u64;
+        pub(crate) type TreeNode = u64;
         pub(crate) type Vertex = NodeIndex;
         pub(crate) type Bag = HashSet<Vertex>;
 
@@ -220,6 +214,7 @@ pub mod graph_structures {
         A structure organizing and containing all useful methods for the
         Nice Tree Decomposition
          */
+        #[derive(PartialEq, Eq, Debug)]
         pub struct NiceTreeDecomposition{
             tree_structure : TreeStructure,
         }

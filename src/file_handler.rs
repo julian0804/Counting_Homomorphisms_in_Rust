@@ -1,7 +1,5 @@
 use super::lib::*;
 
-/*
-
 pub mod file_handler {
     use std::collections::{HashMap, HashSet};
     use std::error::Error;
@@ -11,7 +9,7 @@ pub mod file_handler {
     use petgraph::graph::NodeIndex;
     use petgraph::matrix_graph::*;
     use petgraph::Undirected;
-
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{Bag, NiceTreeDecomposition, NodeType, TreeNode, TreeStructure, Vertex};
     /*
     Reads file and returns BufReader
     taken from https://doc.rust-lang.org/rust-by-example/std_misc/file/read_lines.html
@@ -30,13 +28,12 @@ pub mod file_handler {
     pub fn create_ntd_from_file<P>(filename : P) -> Option<NiceTreeDecomposition>
         where P: AsRef<Path>
     {
-        // These values
+        // Info given by the import format
         let mut number_of_nodes = 0;
         let mut max_bag_size = 0;
         let mut number_of_vertices = 0;
-
-        let mut node_data: HashMap<Vertex, NodeType> = HashMap::new();
-        let mut adjacency_list = AdjList::new();
+        
+        let mut tree_structure : TreeStructure = TreeStructure::new(1);
 
         if let Ok(lines) = read_lines(filename){
             for line in lines {
@@ -46,19 +43,23 @@ pub mod file_handler {
 
                 match type_arg {
                     Some("s") => {
-                        number_of_nodes = args.next().unwrap().parse::<i32>().unwrap();
-                        max_bag_size = args.next().unwrap().parse::<i32>().unwrap();
-                        number_of_vertices = args.next().unwrap().parse::<i32>().unwrap();
+                        number_of_nodes = args.next().unwrap().parse::<u64>().unwrap();
+                        max_bag_size = args.next().unwrap().parse::<u64>().unwrap();
+                        number_of_vertices = args.next().unwrap().parse::<u64>().unwrap();
+                        
+                        // Create the tree structure
+                        tree_structure = TreeStructure::new(number_of_nodes);
                     },
                     Some("n") => {
-                        let nr = args.next().unwrap().parse::<u32>().unwrap();
+                        let nr = args.next().unwrap().parse::<u32>().unwrap() - 1;
                         let node_type = args.next();
-
+                        
+                        // This closure is used to construct the bag out of the following arguments
                         let mut constructed_bag = || {
-                            let mut bag = VertexBag::from([]);
+                            let mut bag = Bag::new();
                             loop {
                                 if let Some(v) = args.next() {
-                                    bag.insert(v.parse::<Vertex>().unwrap());
+                                    bag.insert(Vertex::new(((v.parse::<u64>().unwrap() - 1) as usize)) );
                                 } else {
                                     break;
                                 }
@@ -67,29 +68,30 @@ pub mod file_handler {
                         };
 
                         match node_type {
-                            Some("l") => { node_data.insert(nr.into(), NodeType::Leaf(constructed_bag())); },
-                            Some("i") => { node_data.insert(nr.into(), NodeType::Introduce(constructed_bag())); },
-                            Some("f") => { node_data.insert(nr.into(), NodeType::Forget(constructed_bag())); },
-                            Some("j") => { node_data.insert(nr.into(), NodeType::Join(constructed_bag())); },
+                            Some("l") => {
+                                tree_structure.set_node_data(nr as TreeNode, NodeType::Leaf, constructed_bag());
+                            },
+                            Some("i") => {
+                                tree_structure.set_node_data(nr as TreeNode, NodeType::Introduce, constructed_bag()); 
+                            },
+                            Some("f") => {
+                                tree_structure.set_node_data(nr as TreeNode, NodeType::Forget, constructed_bag()); 
+                            },
+                            Some("j") => {
+                                tree_structure.set_node_data(nr as TreeNode, NodeType::Join, constructed_bag()); 
+                            },
                             _ => {}
                         }
                     },
                     Some("a") => {
-                        let from = args.next().unwrap().parse::<Vertex>().unwrap();
-                        let to = args.next().unwrap().parse::<Vertex>().unwrap();
-                        adjacency_list.insert_edge(from,to);
+                        let parent = args.next().unwrap().parse::<TreeNode>().unwrap() - 1;
+                        let child = args.next().unwrap().parse::<TreeNode>().unwrap() - 1;
+                        tree_structure.set_child(parent, child);
                     }
                     _ => {}
                 }
             }
-
-            // naive root finding
-            let mut root : Vertex = 1;
-            while let Some(i) = adjacency_list.in_neighbours(root){
-                root = *i.get(0).unwrap();
-            }
-
-            Some(NiceTreeDecomposition::new(adjacency_list, node_data, root))
+            Some(NiceTreeDecomposition::new(tree_structure))
 
 
         }
@@ -115,8 +117,8 @@ pub mod file_handler {
 
         let mut graph = petgraph::matrix_graph::MatrixGraph::new_undirected();
 
-        let mut number_of_vertices : Vertex = 0;
-        let mut number_of_edges : Vertex = 0;
+        let mut number_of_vertices : usize = 0;
+        let mut number_of_edges : usize = 0;
         let mut current_vertex : usize = 0;
 
 
@@ -129,8 +131,8 @@ pub mod file_handler {
                 let mut args = content.split(" ");
 
                 if number_of_vertices == 0 {
-                    number_of_vertices = args.next().unwrap().parse::<Vertex>().unwrap();
-                    number_of_edges = args.next().unwrap().parse::<Vertex>().unwrap();
+                    number_of_vertices = args.next().unwrap().parse::<usize>().unwrap();
+                    number_of_edges = args.next().unwrap().parse::<usize>().unwrap();
 
                     for i in 1..(number_of_vertices + 1){
                         let j = graph.add_node(());
@@ -164,35 +166,48 @@ mod tests {
     use std::collections::HashMap;
     use petgraph::graph::NodeIndex;
     use petgraph::matrix_graph::MatrixGraph;
-    use crate::{create_ntd_from_file, file_handler, metis_to_graph};
-    use crate::graph_structures::graph_structures::adjacency::AdjList;
-    use crate::graph_structures::graph_structures::{Vertex, VertexBag};
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
+    use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{Bag, NiceTreeDecomposition, NodeType, TreeStructure, Vertex};
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::{Forget, Introduce, Join, Leaf};
+
+    fn tree_adjacency_example_one() -> TreeStructure {
+        let mut ta = TreeStructure::new(10);
+        ta.set_node_data(0, Leaf, Bag::from([Vertex::new(0)]));
+        ta.set_node_data(1,
+                         Introduce, Bag::from([Vertex::new(0), Vertex::new(1)]));
+        ta.set_node_data(2,
+                         Forget, Bag::from([Vertex::new(1)]));
+        ta.set_node_data(3, Leaf, Bag::from([Vertex::new(1)]));
+        ta.set_node_data(4, Introduce, Bag::from([Vertex::new(1), Vertex::new(2)]));
+        ta.set_node_data(5,Forget, Bag::from([Vertex::new(1)]));
+        ta.set_node_data(6, Join, Bag::from([Vertex::new(1)]));
+        ta.set_node_data(7, Introduce, Bag::from([Vertex::new(1), Vertex::new(3)]));
+        ta.set_node_data(8, Forget, Bag::from([Vertex::new(3)]));
+        ta.set_node_data(9, Forget, Bag::from([]));
+
+        ta.set_child(9,8);
+        ta.set_child(8,7);
+        ta.set_child(7,6);
+        ta.set_child(6,2);
+        ta.set_child(2,1);
+        ta.set_child(1,0);
+        ta.set_child(6,5);
+        ta.set_child(5,4);
+        ta.set_child(4,3);
+
+        ta
+    }
 
     #[test]
     fn test_ntd_creation_from_file(){
-        let mut example_adjacency_list = AdjList::new();
-        example_adjacency_list.insert_edges(vec![
-            (10,9), (6,5), (9,8), (8,7), (7,3), (7,6), (5,4), (2,1), (3,2)
-        ]);
-        let example_node_data: HashMap<Vertex, NodeType> = HashMap::from([
-            (1 , Leaf(VertexBag::from([1]))),
-            (2 , Introduce(VertexBag::from([1,2]))),
-            (3 , Forget(VertexBag::from([2]))),
-            (4 , Leaf(VertexBag::from([2]))),
-            (5 , Introduce(VertexBag::from([2,3]))),
-            (6 , Forget(VertexBag::from([2]))),
-            (7 , Join(VertexBag::from([2]))),
-            (8 , Introduce(VertexBag::from([2,4]))),
-            (9 , Forget(VertexBag::from([4]))),
-            (10 , Forget(VertexBag::from([]))),
-        ]);
 
-        assert_eq!(create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap(),
-                   NiceTreeDecomposition::new(example_adjacency_list, example_node_data, 10));
+        let example_tree_structure = tree_adjacency_example_one();
+        let example_ntd = NiceTreeDecomposition::new(example_tree_structure);
+
+        assert_eq!(create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap(), example_ntd);
     }
 
+    
     #[test]
     fn test_METIS_to_graph(){
 
@@ -205,7 +220,7 @@ mod tests {
             (5, 4), (5, 3), (5, 6),
             (6, 5), (6, 3)];
 
-        let g = file_handler::file_handler::metis_to_graph("data/metis_graphs/tiny_01.graph").unwrap();
+        let g = metis_to_graph("data/metis_graphs/tiny_01.graph").unwrap();
 
         assert_eq!(g.node_count(), 7);
         assert_eq!(g.edge_count(), 11);
@@ -214,5 +229,3 @@ mod tests {
         }
     }
 }
-
-*/
