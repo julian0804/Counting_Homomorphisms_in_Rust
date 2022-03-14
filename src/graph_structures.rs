@@ -216,7 +216,7 @@ pub mod graph_structures {
          */
         #[derive(PartialEq, Eq, Debug)]
         pub struct NiceTreeDecomposition{
-            pub tree_structure : TreeStructure,
+            pub tree_structure : TreeStructure, // TODO: make it private later...
         }
 
         impl NiceTreeDecomposition{
