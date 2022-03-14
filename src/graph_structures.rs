@@ -62,29 +62,52 @@ pub mod graph_structures {
 
         /*
         This structure contains the data of a nice tree decomposition
+
+        Nodes: 0,1,...,N-1
          */
         #[derive(PartialEq, Eq, Debug)]
-        pub struct TreeAdjacency {
+        pub struct TreeStructure {
             number_of_nodes: TreeNode,
             node_data: HashMap<TreeNode, NodeData>,
             children_list: HashMap<TreeNode, Vec<TreeNode>>,
             parents_list: HashMap<TreeNode, TreeNode>
         }
 
-        impl TreeAdjacency {
+        impl TreeStructure {
             /*
             Returns an empty TreeAdjacency Structure with given node size
              */
-            pub fn new(number_of_nodes: u64) -> TreeAdjacency {
+            pub fn new(number_of_nodes: u64) -> TreeStructure {
                 if number_of_nodes == 0 { panic!("Tree needs at least one node"); }
 
-                TreeAdjacency {
+                TreeStructure {
                     number_of_nodes,
                     node_data: HashMap::new(),
                     children_list: HashMap::new(),
                     parents_list: HashMap::new(),
                 }
             }
+
+            /*
+            returns the bag of a given node
+             */
+            pub fn bag(&self, node : TreeNode) -> Option<&Bag>{
+                if let Some(nd) = self.node_data.get(&node){
+                    Some(&nd.bag)
+                }
+                else { None }
+            }
+
+            /*
+            returns the node type of a given node
+             */
+            pub fn node_type(&self, node : TreeNode) -> Option<&NodeType>{
+                if let Some(nd) = self.node_data.get(&node) {
+                    Some(&nd.node_type)
+                }
+                else { None }
+            }
+
 
             /*
             Returns the number of nodes of the tree decomposition
@@ -122,7 +145,7 @@ pub mod graph_structures {
             /*
             Checks if child node relation ship
              */
-            pub fn is_child_of(&self, child: TreeNode, parent: TreeNode) -> bool {
+            pub fn is_parent_of(&self, parent: TreeNode, child: TreeNode) -> bool {
                 if let Some(p) = self.parent(child) {
                     (parent == *p)
                 } else {
@@ -159,7 +182,7 @@ pub mod graph_structures {
                 }
 
                 // Checks if the given nodes do not already have the child-parent relationship
-                if !self.is_child_of(child, parent) {
+                if !self.is_parent_of(child, parent) {
                     // sets the parent
                     self.parents_list.insert(child, parent);
 
@@ -194,144 +217,47 @@ pub mod graph_structures {
                 current_node
             }
         }
-    }
 
-
-    pub mod adjacency {
-        use super::*;
         /*
-        Implementation of a simple adjacency list for a directed graph with possible loops
-        but without multi-edges
-
-        Vertices: 1 ... N
-
-        TODO: This structure is currently only needed by the tree decomposition function
-        TODO: Do some better tree structure with more checking...
-
-        TODO: create checker
-
-        */
-        #[derive(Debug, PartialEq)]
-        pub struct AdjList {
-            pub adjacency_list: HashMap<Vertex, Vec<Vertex>>,
-            // safes all out-going edges
-            pub reversed_adjacency_list: HashMap<Vertex, Vec<Vertex>>, // safes all in-going edges
+        A structure organizing and containing all useful methods for the
+        Nice Tree Decomposition
+         */
+        pub struct NiceTreeDecomposition{
+            tree_structure : TreeStructure,
         }
 
-        impl AdjList {
-            /*
-           Returns an empty AdjList
-            */
-            pub fn new() -> AdjList {
-                AdjList { adjacency_list: HashMap::new(), reversed_adjacency_list: HashMap::new() }
-            }
+        impl NiceTreeDecomposition{
 
             /*
-            Returns the number of edges in the adjacency list
+            Simple constructor for the NiceTreeDecomposition
              */
-            pub fn number_of_edges(&self) -> usize
-            {
-                self.adjacency_list.iter().map(|(i, v)| v.len()).sum()
-            }
-
-            /*
-            returning the number of vertices by searching the maximum key in the adjacency list, but not how many vertices are in the graph
-             */
-            pub fn number_of_vertices(&self) -> Vertex
-            {
-                *self.adjacency_list.keys().max().unwrap_or(&0)
-            }
-
-            /*
-            returning a vector of all vertices that has at least one edge going in or out
-             */
-            /*
-            pub fn connected_vertices(&self) -> Vec<&Vertex>{
-                let l1 = HashSet::from(self.adjacency_list.keys().collect());
-                let l2 = HashSet::from(self.reversed_adjacency_list.keys().collect());
-                l1.union(&l2).collect()
-            }
-             */
-
-            /*
-            Checks if the edge (from, to) exists in this adjacency list
-             */
-            pub fn check_edge(&self, from: Vertex, to: Vertex) -> bool {
-                if self.adjacency_list.get(&from) == None {
-                    return false;
-                }
-                self.adjacency_list.get(&from).unwrap().contains(&to)
-            }
-            /*
-            inserts edge if not already available
-             */
-            pub fn insert_edge(&mut self, from: Vertex, to: Vertex) {
-                // Checks if edge already exists
-                if !self.check_edge(from, to) {
-
-                    // Inserts edge into the adjacency_list
-                    // Checks if we already have an edge going out of "from"
-                    if let Some(out_list) = self.adjacency_list.get_mut(&from) {
-                        out_list.push(to);
-                    } else {
-                        self.adjacency_list.insert(from, vec![to]);
-                    }
-
-
-                    // Inserts edge into the reversed_adjacency_list
-                    // Checks if we already have an edge going in "to"
-                    if let Some(in_list) = self.reversed_adjacency_list.get_mut(&to)
-                    {
-                        in_list.push(from);
-                    } else {
-                        self.reversed_adjacency_list.insert(to, vec![from]);
-                    }
-                }
-            }
-
-
-            /*
-            insert multiple edges given by a Vector of tuples
-             */
-            pub fn insert_edges(&mut self, edges: Vec<(Vertex, Vertex)>)
-            {
-                for (a, b) in edges {
-                    self.insert_edge(a, b);
+            pub fn new(tree_structure : TreeStructure) -> NiceTreeDecomposition{
+                NiceTreeDecomposition{
+                    tree_structure
                 }
             }
 
             /*
-            Returns an &Vec<Vertex> of the out neighbours if the vertex "from" has some, None otherwise
+            Returns the bag of a given tree node
              */
-            pub fn out_neighbours(&self, from: Vertex) -> Option<&Vec<Vertex>>
-            {
-                self.adjacency_list.get(&from)
+            pub fn bag(&self, node : TreeNode) -> Option<&Bag>{
+                self.tree_structure.bag(node)
             }
 
             /*
-            Returns a Vector of neighbours going in
+            Returns the node type of a given node
              */
-            pub fn in_neighbours(&self, to: Vertex) -> Option<&Vec<Vertex>> {
-                self.reversed_adjacency_list.get(&to)
+            pub fn node_type(&self, node : TreeNode) -> Option<&NodeType>{
+                self.tree_structure.node_type(node)
             }
 
-            /*
-            Returns the out degree of the vertex "from"
-             */
-            pub fn out_degree(&self, from: Vertex) -> usize
-            {
-                if let Some(i) = self.out_neighbours(from) { i.len() } else { 0 }
-            }
-
-            /*
-            Returns the in degree of the vertex "from"
-             */
-            pub fn in_degree(&self, to: Vertex) -> usize
-            {
-                if let Some(i) = self.in_neighbours(to) { i.len() } else { 0 }
-            }
         }
+
+
+
     }
+
+
 
     /*
     pub mod nice_tree_decomposition{
@@ -512,55 +438,12 @@ pub mod graph_structures {
 mod tests {
     use std::collections::{HashMap, HashSet};
     use petgraph::matrix_graph::NodeIndex;
-    use crate::graph_structures::graph_structures::new_ntd::{NodeData, TreeAdjacency};
+    use crate::graph_structures::graph_structures::new_ntd::{NodeData, NodeType, TreeStructure};
     use crate::graph_structures::graph_structures::new_ntd::NodeType::{Forget, Introduce, Join, Leaf};
     use crate::graph_structures::graph_structures::new_ntd::{Vertex, Bag};
 
-    /*
-    #[test]
-    fn adjacency_list(){
-        let mut adjlist = AdjList::new();
-        assert_eq!(adjlist.number_of_edges(),0);
-
-        adjlist.insert_edge(1,2);
-        assert_eq!(adjlist.number_of_edges(),1);
-
-        adjlist.insert_edge(1,2);
-        assert_eq!(adjlist.number_of_edges(),1);
-
-        adjlist.insert_edge(3,2);
-        adjlist.insert_edge(1,3);
-        assert_eq!(adjlist.number_of_edges(), 3);
-
-        assert_eq!(adjlist.check_edge(1,3), true);
-        assert_eq!(adjlist.check_edge(3,1), false);
-
-        assert_eq!(adjlist.number_of_vertices(), 3);
-        assert_eq!(adjlist.out_neighbours(2), None);
-        assert_eq!(adjlist.out_degree(2), 0);
-
-        assert_eq!(*(adjlist.out_neighbours(1).unwrap()), vec![2,3]);
-        assert_ne!(*(adjlist.out_neighbours(1).unwrap()), vec![4]);
-        assert_ne!(*(adjlist.out_neighbours(1).unwrap()), vec![3,2]);
-
-        let mut adjlist1 = AdjList::new();
-        assert_eq!(adjlist1.number_of_vertices(),0);
-
-        // test cases to check in_neighbours
-        assert_eq!(adjlist.in_neighbours(1), None);
-        assert_eq!(*(adjlist.in_neighbours(2).unwrap()), vec![1,3]);
-        assert_eq!(*(adjlist.in_neighbours(3).unwrap()), vec![1]);
-
-        // test cases to check in_degree
-        assert_eq!(adjlist.in_degree(1),0);
-        assert_eq!(adjlist.in_degree(2),2);
-        assert_eq!(adjlist.in_degree(3),1);
-
-    }
-
-     */
-    fn tree_adjacency_example_one() -> TreeAdjacency{
-        let mut ta = TreeAdjacency::new(10);
+    fn tree_adjacency_example_one() -> TreeStructure {
+        let mut ta = TreeStructure::new(10);
         ta.set_node_data(0, Leaf, Bag::from([Vertex::new(1)]));
         ta.set_node_data(1,
                          Introduce, Bag::from([Vertex::new(1), Vertex::new(2)]));
@@ -613,14 +496,28 @@ mod tests {
         assert_eq!(test_object.children_count(2), 1);
 
         // test is_child_of
-        assert!(test_object.is_child_of(2,6));
-        assert!(test_object.is_child_of(5,6));
-        assert!(test_object.is_child_of(8,9));
-        assert!(!test_object.is_child_of(0,9));
-        assert!(!test_object.is_child_of(6,2));
+        assert!(test_object.is_parent_of(6, 2));
+        assert!(test_object.is_parent_of(6, 5));
+        assert!(test_object.is_parent_of(9, 8));
+        assert!(!test_object.is_parent_of(9, 0));
+        assert!(!test_object.is_parent_of(2, 6));
 
         // test root
         assert_eq!(test_object.root(), 9);
+
+        // test bag
+        assert_eq!(test_object.bag(0), Some(&HashSet::from([NodeIndex::new(1)])));
+        assert_eq!(test_object.bag(7), Some(&HashSet::from([NodeIndex::new(2), NodeIndex::new(4)])));
+        assert_eq!(test_object.bag(6), Some(&HashSet::from([NodeIndex::new(2)])));
+        assert_eq!(test_object.bag(9), Some(&HashSet::from([])));
+        assert_eq!(test_object.bag(8), Some(&HashSet::from([NodeIndex::new(4)])));
+
+        // test node_type()
+        assert_eq!(test_object.node_type(0), Some(&NodeType::Leaf));
+        assert_eq!(test_object.node_type(4), Some(&NodeType::Introduce));
+        assert_eq!(test_object.node_type(8), Some(&NodeType::Forget));
+        assert_eq!(test_object.node_type(6), Some(&NodeType::Join));
+
     }
 
 /*
