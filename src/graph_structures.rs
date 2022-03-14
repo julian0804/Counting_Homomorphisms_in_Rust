@@ -251,6 +251,60 @@ pub mod graph_structures {
                 self.tree_structure.node_type(node)
             }
 
+            pub fn stingy_ordering(&self) -> Vec<TreeNode>{
+                self.recursive_stingy_ordering(self.tree_structure.root()).0
+            }
+
+            /*
+            recursively calculating stingy ordering by returning (stingy_ordering, branch_number)
+             */
+            pub fn recursive_stingy_ordering(&self, current_node: TreeNode) -> (Vec<TreeNode>, TreeNode)
+            {
+                let mut stingy_order : Vec<TreeNode>= Vec::new();
+                let mut branch_number : TreeNode = 0;
+
+                match self.node_type(current_node){
+                    Some(NodeType::Leaf) => (), // vertex will be pushed later and branch number is already 0
+                    Some(NodeType::Introduce) | Some(NodeType::Forget) => {
+                        if let Some(children) = self.tree_structure.children(current_node){
+                            if let Some(child) = children.get(0){
+                                let (so, bn) = self.recursive_stingy_ordering(*child);
+                                stingy_order = so;
+                                branch_number = bn;
+                            }
+                        }
+                    },
+                    Some(NodeType::Join) => {
+                        if let Some(children) = self.tree_structure.children(current_node){
+
+                            let mut child1 = children.get(0).unwrap();
+                            let mut child2 = children.get(1).unwrap();
+
+                            let (mut so1, bn1) = self.recursive_stingy_ordering(*child1);
+                            let (mut so2, bn2) = self.recursive_stingy_ordering(*child2);
+
+                            // Comparing the branch numbers of both subtrees
+                            if bn1 >= bn2{
+                                stingy_order = so1;
+                                stingy_order.append(&mut so2);
+                            }
+                            else {
+                                stingy_order = so2;
+                                stingy_order.append(&mut so1);
+                            }
+
+                            branch_number = bn1 + bn2 + 1; // summing up the branch number
+                        }
+                    },
+                    None => ()
+                }
+
+                // inserting current vertex at last
+                stingy_order.push(current_node);
+
+                // return result
+                (stingy_order, branch_number)
+            }
         }
 
 
@@ -438,7 +492,7 @@ pub mod graph_structures {
 mod tests {
     use std::collections::{HashMap, HashSet};
     use petgraph::matrix_graph::NodeIndex;
-    use crate::graph_structures::graph_structures::new_ntd::{NodeData, NodeType, TreeStructure};
+    use crate::graph_structures::graph_structures::new_ntd::{NiceTreeDecomposition, NodeData, NodeType, TreeStructure};
     use crate::graph_structures::graph_structures::new_ntd::NodeType::{Forget, Introduce, Join, Leaf};
     use crate::graph_structures::graph_structures::new_ntd::{Vertex, Bag};
 
@@ -471,7 +525,20 @@ mod tests {
     }
 
     #[test]
-    fn test_tree_adjacency(){
+    fn test_stingy_ordering(){
+        let test_object = tree_adjacency_example_one();
+        let test_ntd = NiceTreeDecomposition::new(test_object);
+        assert_eq!(test_ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9]);
+
+        // with example 2
+        /*
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        assert_eq!(ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
+         */
+    }
+
+    #[test]
+    fn test_tree_structure(){
         let test_object = tree_adjacency_example_one();
 
         assert_eq!(test_object.node_count(), 10);
@@ -519,87 +586,4 @@ mod tests {
         assert_eq!(test_object.node_type(6), Some(&NodeType::Join));
 
     }
-
-/*
-    #[test]
-    fn tree_decomposition()
-    {
-        // Uses the tree from github
-        let mut node_data: HashMap<Vertex, NodeType> = HashMap::new();
-        node_data.insert(1, NodeType::Leaf(VertexBag::from([1])));
-        node_data.insert(2, NodeType::Introduce(VertexBag::from([1,2])));
-        node_data.insert(3, NodeType::Forget(VertexBag::from([2])));
-        node_data.insert(4, NodeType::Leaf(VertexBag::from([2])));
-        node_data.insert(5, NodeType::Introduce(VertexBag::from([2,3])));
-        node_data.insert(6, NodeType::Forget(VertexBag::from([2])));
-        node_data.insert(7, NodeType::Join(VertexBag::from([2])));
-        node_data.insert(8, NodeType::Introduce(VertexBag::from([2,4])));
-        node_data.insert(9, NodeType::Forget(VertexBag::from([4])));
-        node_data.insert(10, NodeType::Forget(VertexBag::from([])));
-
-        let mut adj_list = AdjList::new();
-        adj_list.insert_edge(2,1);
-        adj_list.insert_edge(3,2);
-        adj_list.insert_edge(7,3);
-        adj_list.insert_edge(5,4);
-        adj_list.insert_edge(6,5);
-        adj_list.insert_edge(7,6);
-        adj_list.insert_edge(8,7);
-        adj_list.insert_edge(9,8);
-        adj_list.insert_edge(10,9);
-
-        let mut adj_list_2 = AdjList::new();
-        adj_list_2.insert_edges(vec![(2,1),(3,2),(7,3),(5,4),(6,5),(7,6),(8,7),(9,8),(10,9),]);
-        assert_eq!(adj_list, adj_list_2);
-
-        let treedecomp = NiceTreeDecomposition::new(adj_list, node_data, 10);
-
-        assert_eq!(treedecomp.get_bag(&7), Some(&VertexBag::from([2])));
-        assert_eq!(treedecomp.get_bag(&2), Some(&VertexBag::from([2,1])));
-        assert_eq!(treedecomp.get_bag(&2), Some(&VertexBag::from([1,2])));
-        assert_eq!(treedecomp.get_bag(&10), Some(&VertexBag::from([])));
-
-        assert_eq!(treedecomp.get_node_data(&2), Some(&NodeType::Introduce(VertexBag::from([1,2]))));
-        assert_eq!(treedecomp.get_union(&2), VertexBag::from([1,2]));
-
-
-        assert_eq!(treedecomp.adjacency_list.out_neighbours(7), Some(&Vec::from([3,6])) );
-
-        assert_eq!(treedecomp.get_union(&7), VertexBag::from([1,2,3]));
-        assert_eq!(treedecomp.get_union(&10), VertexBag::from([1,2,3,4]));
-
-        // Tests for calculating branch number
-        assert_eq!(1, treedecomp.calculate_single_branch_number(&7));
-        assert_eq!(1, treedecomp.calculate_single_branch_number(&8));
-        assert_eq!(0, treedecomp.calculate_single_branch_number(&3));
-        assert_eq!(0, treedecomp.calculate_single_branch_number(&4));
-
-        // Tests for calculating all branch numbers
-        let branch_numbers = HashMap::from([
-            (1,0),
-            (2,0),
-            (3,0),
-            (4,0),
-            (5,0),
-            (6,0),
-            (7,1),
-            (8,1),
-            (9,1),
-            (10,1),
-        ]);
-
-        assert_eq!(branch_numbers, treedecomp.calculate_branch_numbers_naive());
-    }
-
-    #[test]
-    fn test_stingy_ordering() {
-        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
-        assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10,11,12,13,14]);
-
-        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
-        assert_eq!(ntd.stingy_ordering(),vec![1,2,3,4,5,6,7,8,9,10]);
-
-    }
-
- */
 }
