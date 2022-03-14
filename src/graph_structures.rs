@@ -10,11 +10,9 @@ pub mod graph_structures {
     pub type VertexBag = HashSet<Vertex>;
 
 
-    pub mod new_ntd {
+    pub mod nice_tree_decomposition {
         use std::cmp::max;
         use std::collections::{HashMap, HashSet};
-        use std::env::current_exe;
-        use std::process::Child;
         use petgraph::matrix_graph::NodeIndex;
 
         type TreeNode = u64;
@@ -311,190 +309,14 @@ pub mod graph_structures {
 
     }
 
-
-
-    /*
-    pub mod nice_tree_decomposition{
-        use std::ptr::hash;
-        use crate::graph_structures::graph_structures::adjacency::AdjList;
-        use super::*;
-
-        #[derive(Debug,PartialEq)]
-        pub enum NodeType{
-            Leaf(VertexBag),
-            Introduce(VertexBag),
-            Forget(VertexBag),
-            Join(VertexBag)
-        }
-
-
-
-        #[derive(Debug, PartialEq)]
-        pub struct NiceTreeDecomposition{
-            pub adjacency_list : AdjList,
-            pub node_data : HashMap<Vertex, NodeType>,
-            pub root : Vertex
-        }
-
-        impl NiceTreeDecomposition {
-            /*
-            creates a tree decomposition given
-            -> adjacency List
-            -> node_data
-            -> root
-             */
-            pub fn new(adjacency_list: AdjList, node_data: HashMap<Vertex, NodeType>, root: Vertex) -> NiceTreeDecomposition {
-                NiceTreeDecomposition { adjacency_list, node_data, root }
-            }
-
-            /*
-            gets the node data
-             */
-            pub fn get_node_data(&self, v: &Vertex) -> Option<&NodeType>{
-                self.node_data.get(v)
-            }
-
-            /*
-            returns the reference to the bag of the given node
-            */
-            pub fn get_bag(&self, v : &Vertex) -> Option<&VertexBag>{
-                match self.get_node_data(v){
-                    None => None,
-                    Some(NodeType::Leaf(n)) => Some(&n),
-                    Some(NodeType::Introduce(n)) => Some(&n),
-                    Some(NodeType::Forget(n)) => Some(&n),
-                    Some(NodeType::Join(n)) => Some(&n),
-                }
-            }
-
-            /*
-            This function calculates a single branch number for a node
-             by summing up the branch numbers of its children
-             and eventually adding +1 for join nodes
-             */
-            pub fn calculate_single_branch_number(&self, current_node : &Vertex) -> Vertex
-            {
-                if let Some(out_neighbours) = self.adjacency_list.out_neighbours(*current_node)
-                {
-                    let mut sum =  out_neighbours.iter().map(|cur| self.calculate_single_branch_number(cur)).sum();
-                    if let Some(NodeType::Join(_)) = self.get_node_data(&current_node){ sum += 1 }
-                    sum
-                }
-                else {
-                    0
-                }
-            }
-            /*
-            Calculates the branch number for each
-            TODO: Make it more efficient!
-             */
-            pub fn calculate_branch_numbers_naive(&self) -> HashMap<Vertex, Vertex>{
-                let mut result: HashMap<Vertex,Vertex> = HashMap::new();
-                for j in 1..(self.adjacency_list.number_of_vertices() + 1){
-                    result.insert(j, self.calculate_single_branch_number(&j));
-                }
-                result
-            }
-
-            /*
-            This function returns a stingy ordering of the tree decomposition
-             */
-            pub fn stingy_ordering(&self) -> Vec<Vertex>
-            { self.recursive_stingy_ordering(self.get_root()) }
-
-            /*
-            This function calculates the stingy ordering recursively
-            -> for explanation see thesis
-             */
-            pub fn recursive_stingy_ordering(&self, current_vertex : Vertex) -> Vec<Vertex>
-            {
-                let mut result: Vec<Vertex>= Vec::new();
-
-                // compares degree of nodes
-                match self.adjacency_list.out_degree(current_vertex){
-                    1 => {
-                        let child = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(0).unwrap();
-                        result = self.recursive_stingy_ordering(*child);
-                    },
-                    2 =>{
-                        let mut child1 = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(0).unwrap();
-                        let mut child2 = self.adjacency_list.out_neighbours(current_vertex).unwrap().get(1).unwrap();
-
-                        let mut order1 = self.recursive_stingy_ordering(*child1);
-                        let mut order2 = self.recursive_stingy_ordering(*child2);
-
-                        if self.calculate_single_branch_number(child1) >= self.calculate_single_branch_number(child2){
-                            result = order1;
-                            result.append(&mut order2);
-                        }
-                        else {
-                            result = order2;
-                            result.append(&mut order1);
-                        }
-                    },
-                    _=>(),
-                }
-
-                result.push(current_vertex);
-                result
-            }
-
-            /*
-           clones the bag of the given vertex
-             */
-            pub fn get_bag_clone(&self, v : &Vertex) -> VertexBag
-            {
-                match self.get_node_data(v){
-                    None => VertexBag::new(),
-                    Some(NodeType::Leaf(n)) => n.clone(),
-                    Some(NodeType::Introduce(n)) => n.clone(),
-                    Some(NodeType::Forget(n)) => n.clone(),
-                    Some(NodeType::Join(n)) => n.clone(),
-                }
-            }
-
-            /*
-            Returns the union of all bags of the subtree rooted at the given node
-             */
-            pub fn get_union(&self, v : &Vertex) -> VertexBag
-            {
-                let children = self.adjacency_list.out_neighbours(*v);
-                let mut union: VertexBag = self.get_bag_clone(v);
-
-                match children {
-                    Some(vec) => {
-                        for i in vec{
-                            union.extend(&self.get_union(i));
-                        }
-                    },
-                    None => (),
-                }
-                union
-            }
-
-            /*
-            Returns the root of the nice tree decomposition
-             */
-            pub fn get_root(&self) -> Vertex{
-                self.root
-            }
-
-        }
-
-
-    }
-
-}
-
-     */
 }
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, HashSet};
     use petgraph::matrix_graph::NodeIndex;
-    use crate::graph_structures::graph_structures::new_ntd::{NiceTreeDecomposition, NodeData, NodeType, TreeStructure};
-    use crate::graph_structures::graph_structures::new_ntd::NodeType::{Forget, Introduce, Join, Leaf};
-    use crate::graph_structures::graph_structures::new_ntd::{Vertex, Bag};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeData, NodeType, TreeStructure};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::{Forget, Introduce, Join, Leaf};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{Vertex, Bag};
 
     fn tree_adjacency_example_one() -> TreeStructure {
         let mut ta = TreeStructure::new(10);
