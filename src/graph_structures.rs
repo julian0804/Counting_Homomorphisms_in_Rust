@@ -100,7 +100,6 @@ pub mod graph_structures {
                 else { None }
             }
 
-
             /*
             Returns the number of nodes of the tree decomposition
              */
@@ -132,7 +131,6 @@ pub mod graph_structures {
             pub fn parent(&self, node: TreeNode) -> Option<&TreeNode> {
                 self.parents_list.get(&node)
             }
-
 
             /*
             Checks if child node relation ship
@@ -207,6 +205,36 @@ pub mod graph_structures {
                     } else { break }
                 }
                 current_node
+            }
+
+            /*
+            Only for Introduce & Forget Nodes: return the unique child
+             */
+            pub fn unique_child(&self, node : TreeNode) -> Option<&TreeNode>{
+                match self.node_type(node){
+                    Some(NodeType::Introduce) | Some(NodeType::Forget) => {
+                        self.children(node).unwrap().get(0)
+                    },
+                    _ => {None}
+                }
+            }
+
+
+            /*
+            returns the unique vertex for introduce nodes
+             */
+            pub fn introduced_vertex(&self, node : TreeNode) -> Option<Vertex>{
+                match self.node_type(node){
+                    Some(NodeType::Introduce) => {
+                        let p = self.bag(node).unwrap();
+                        let q = self.bag(*self.unique_child(node).unwrap()).unwrap();
+                        let dif : HashSet<_>= p.difference(q).collect();
+                        let v = **dif.iter().next().unwrap();
+                        Some(v)
+
+                    },
+                    _ => {None}
+                }
             }
         }
 
@@ -380,5 +408,18 @@ mod tests {
         assert_eq!(test_object.node_type(8), Some(&NodeType::Forget));
         assert_eq!(test_object.node_type(6), Some(&NodeType::Join));
 
+        // test unqiue child
+        assert_eq!(test_object.unique_child(7),Some(&6));
+        assert_eq!(test_object.unique_child(2), Some(&1));
+        assert_eq!(test_object.unique_child(0), None);
+        assert_eq!(test_object.unique_child(6), None);
+
+        // test introduced vertex
+        assert_eq!(test_object.introduced_vertex(1), Some(NodeIndex::new(1)));
+        assert_eq!(test_object.introduced_vertex(2), None);
+        assert_eq!(test_object.introduced_vertex(4), Some(NodeIndex::new(2)));
+        assert_eq!(test_object.introduced_vertex(7), Some(NodeIndex::new(3)));
+        assert_eq!(test_object.introduced_vertex(8), None);
+        assert_eq!(test_object.introduced_vertex(6), None);
     }
 }
