@@ -221,7 +221,7 @@ pub mod graph_structures {
 
 
             /*
-            returns the unique vertex for introduce nodes
+            returns the introduced vertex for introduce nodes
              */
             pub fn introduced_vertex(&self, node : TreeNode) -> Option<Vertex>{
                 match self.node_type(node){
@@ -236,6 +236,24 @@ pub mod graph_structures {
                     _ => {None}
                 }
             }
+
+            /*
+            returns the forgotten vertex for forget nodes
+             */
+            pub fn forgotten_vertex(&self, node : TreeNode) -> Option<Vertex>{
+                match self.node_type(node){
+                    Some(NodeType::Forget) => {
+                        let p = self.bag(node).unwrap();
+                        let q = self.bag(*self.unique_child(node).unwrap()).unwrap();
+                        let dif : HashSet<_>= q.difference(p).collect();
+                        let v = **dif.iter().next().unwrap();
+                        Some(v)
+
+                    },
+                    _ => {None}
+                }
+            }
+
         }
 
         /*
@@ -421,5 +439,14 @@ mod tests {
         assert_eq!(test_object.introduced_vertex(7), Some(NodeIndex::new(3)));
         assert_eq!(test_object.introduced_vertex(8), None);
         assert_eq!(test_object.introduced_vertex(6), None);
+
+        // test forgotten vertex
+        assert_eq!(test_object.forgotten_vertex(2),Some(NodeIndex::new(0)));
+        assert_eq!(test_object.forgotten_vertex(5),Some(NodeIndex::new(2)));
+        assert_eq!(test_object.forgotten_vertex(8),Some(NodeIndex::new(1)));
+        assert_eq!(test_object.forgotten_vertex(0), None);
+        assert_eq!(test_object.forgotten_vertex(6), None);
+        assert_eq!(test_object.forgotten_vertex(1), None);
+
     }
 }
