@@ -270,12 +270,7 @@ pub mod diaz {
                         let q1 = children.get(0).unwrap();
                         let q2 = children.get(1).unwrap();
 
-                        let max_mapping = ||{
-                            let b = ntd.bag(p).unwrap().len() as Mapping; // number of vertices in a bag
-                            let n = to_graph.node_count();
-                            n.pow((b) as u32)
-                        };
-
+                        // Updates every new mapping
                         for f in 0..table.max_bag_mappings(p){
                             table.set(p,
                                       f as Mapping,
@@ -283,6 +278,7 @@ pub mod diaz {
                                           table.get(q2, &(f as Mapping)).unwrap());
                         }
 
+                        // Deletes entries after use...
                         table.table.remove(q1);
                         table.table.remove(q2);
 
