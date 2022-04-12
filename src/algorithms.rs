@@ -1,11 +1,12 @@
 
 pub mod diaz {
-
-    use std::collections::HashMap;
+    use std::borrow::Borrow;
+    use std::cmp::max;
+    use std::collections::{HashMap, HashSet};
     use std::iter::Map;
-    use petgraph::matrix_graph::MatrixGraph;
+    use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode, Vertex};
 
     pub type Mapping = u64;
 
@@ -14,16 +15,18 @@ pub mod diaz {
      */
     pub struct DPData<'a>{
         table : HashMap<TreeNode, HashMap<Mapping, u64>>,
+        nice_tree_decomposition : &'a NiceTreeDecomposition,
         from_graph : &'a MatrixGraph<(),(), Undirected>,
         to_graph : &'a MatrixGraph<(),(), Undirected>,
     }
 
 
-
     impl<'a> DPData<'a>{
 
-        pub fn new<'b>(from_graph : &'b MatrixGraph<(),(), Undirected>, to_graph : &'b MatrixGraph<(),(), Undirected>) -> DPData<'b> {
-            DPData { table : HashMap::new(),  from_graph, to_graph }
+        pub fn new<'b>(from_graph : &'b MatrixGraph<(),(), Undirected>,
+                       to_graph : &'b MatrixGraph<(),(), Undirected>,
+                       nice_tree_decomposition : &'b NiceTreeDecomposition,) -> DPData<'b> {
+            DPData { table : HashMap::new(), nice_tree_decomposition, from_graph, to_graph }
         }
 
         /*
@@ -45,6 +48,7 @@ pub mod diaz {
                 self.table.insert(node, HashMap::from([(mapping, value)]));
             }
         }
+
 
         /*
         The Following operations work on integer functions
@@ -85,6 +89,37 @@ pub mod diaz {
             l / (n as Mapping) + r
         }
 
+        /*
+        Returns the maximum mapping from a bag of a given node to the to_graph + 1
+        for the iterators
+         */
+        pub fn max_bag_mappings(&self, node : TreeNode) -> Mapping{
+            let bag_size = self.nice_tree_decomposition.bag(node).unwrap().len();
+            let number_of_vertices = self.to_graph.node_count();
+            number_of_vertices.pow(bag_size as u32) as Mapping
+        }
+
+        /*
+        bag to sorted bag
+         */
+        pub fn sorted_bag(&self, node : TreeNode) -> Vec<Vertex>{
+            let mut v: Vec<&Vertex> = Vec::from_iter(self.nice_tree_decomposition.bag(node).unwrap().iter());
+            v.sort();
+            v.iter().map(|e| **e).collect()
+        }
+
+
+        /*
+        A function mapping the integer function on to a tuple
+         */
+        pub fn debug_mapping(&self, f : Mapping, sig : Mapping) -> Vec<(Mapping,Mapping)>{
+            let mut vec = Vec::new();
+            for i in 0..(sig){
+                vec.push((i as Mapping, self.apply(f, i as Mapping)));
+            }
+            vec
+        }
+
 
     }
 
@@ -98,34 +133,168 @@ pub mod diaz {
     {
         let stingy_order = ntd.stingy_ordering();
 
-        let mut table = DPData::new(from_graph, to_graph);
+        let mut table = DPData::new( from_graph, to_graph, &ntd);
 
-        for node in stingy_order{
-            match ntd.node_type(node){
-                Some(Leaf) => {
-                    let unique_vertex = ntd.bag(node).unwrap().iter().next().unwrap();
+        for p in stingy_order{
+            match ntd.node_type(p){
+                Some(NodeType::Leaf) => {
+                    let unique_vertex = ntd.bag(p).unwrap().iter().next().unwrap();
                     // be carefully, we return the number of vertices
 
                     // inserts the mapping (unique_vertex -> aim_vertex) for each
                     // aim_vertex in the aim graph
                     for aim_vertex in 0..to_graph.node_count(){
-                        table.set(node, aim_vertex as Mapping, 1);
+                        table.set(p, aim_vertex as Mapping, 1);
                     }
-                }
-                Some(Introduce) => {
-                }
-                Some(Forget) => {
+                },
+                Some(NodeType::Introduce) => {
+                    // TODO: make unique_child & introduced_vertex also to methods of NiceTreeDecomposition
+                    // So tree_structure do not have to be public
+                    let q = *ntd.tree_structure.unique_child(p).unwrap();
+                    let v = ntd.tree_structure.introduced_vertex(p).unwrap();
 
-                }
-                Some(Join) => {
+                    // For calculating S_q
+                    let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
+                    let neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
+                    let s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(q).unwrap()).collect(); // possible error case, explanation below
+                    /*
+                    The abstract algorithm uses {u,v} \in  E(G_p)
+                    -> I think only edges to the bag of q are necessary otherwise the separator property of the nice tree decomposition would be harmed
+                     */
 
-                }
+                    // transforms the bag into a sorted vertex used for integer functions
+                    let sorted_p_bag = table.sorted_bag(p);
+                    let sorted_q_bag = table.sorted_bag(q);
+
+                    // significance
+                    let significance_list_p = {
+                        let mut hs = HashMap::new();
+                        for i in 0..sorted_p_bag.len(){
+                            hs.insert(sorted_p_bag[i], i);
+                        }
+                        hs.clone()
+                    };
+
+                    //returns the significance of a given vertex in the bag
+                    let significance_p = |a : &Vertex|{
+                        significance_list_p.get(a).unwrap()
+                    };
+
+
+                    // significance for q
+                    let significance_list_q = {
+                        let mut hs = HashMap::new();
+                        for i in 0..sorted_q_bag.len(){
+                            hs.insert(sorted_q_bag[i], i);
+                        }
+                        hs
+                    };
+
+                    //returns the significance of a given vertex in the bag
+                    let significance_q = |a : &Vertex|{
+                        significance_list_q.get(a).unwrap()
+                    };
+
+                    for f_q in 0..table.max_bag_mappings(q){
+                        for a in 0..to_graph.node_count(){
+
+
+                            let test_condition = {
+                                let mut t = true;
+
+                                for u in s_q.clone(){
+                                    if !to_graph.has_edge(Vertex::new(a),
+                                                          Vertex::new(table.apply(f_q,*significance_q(u) as Mapping ) as usize)){
+                                        t = false;
+                                        break;
+                                    }
+                                }
+                                t
+                            };
+
+                            let f = table.extend(f_q, *significance_p(&v) as Mapping, a as Mapping).clone();
+
+                            if test_condition{
+                                let value = table.get(&q, &f_q).unwrap().clone();
+
+                                table.set(p,
+                                          f,
+                                          value);
+                            }
+                            else {
+                                table.set(p,
+                                          f,
+                                          0);
+                            }
+
+                        }
+                    }
+
+
+                    table.table.remove(&q);
+
+
+                },
+                Some(NodeType::Forget) => {
+                    let q = ntd.tree_structure.unique_child(p).unwrap();
+                    let v = ntd.tree_structure.forgotten_vertex(p).unwrap();
+
+                    // transforms the bag into a sorted vertex used for integer functions
+                    let sorted_bag = table.sorted_bag(p);
+
+
+                    let old_significance = |a : &Vertex|{
+                        if let Some(i) = sorted_bag.iter().position(|i| a > i){
+                            i
+                        }
+                        else {
+                            sorted_bag.len()
+                        }
+                    };
+
+                    for f in 0..table.max_bag_mappings(p){
+                        let mut sum = 0;
+                        for a in 0..to_graph.node_count(){
+                            let f_old = table.extend(f,old_significance(&v) as Mapping, a as Mapping);
+                            sum += table.get(&q, &f_old).unwrap();
+                        }
+                        table.set(p, f, sum);
+                    }
+
+                    table.table.remove(q);
+
+
+                },
+                Some(NodeType::Join) => {
+                    if let Some(children) = ntd.tree_structure.children(p){
+                        let q1 = children.get(0).unwrap();
+                        let q2 = children.get(1).unwrap();
+
+                        let max_mapping = ||{
+                            let b = ntd.bag(p).unwrap().len() as Mapping; // number of vertices in a bag
+                            let n = to_graph.node_count();
+                            n.pow((b) as u32)
+                        };
+
+                        for f in 0..table.max_bag_mappings(p){
+                            table.set(p,
+                                      f as Mapping,
+                                      table.get(q1, &(f as Mapping)).unwrap() *
+                                          table.get(q2, &(f as Mapping)).unwrap());
+                        }
+
+                        table.table.remove(q1);
+                        table.table.remove(q2);
+
+                    }
+                },
                 None => {
 
-                }
+                },
             }
         }
-        1
+
+        table.get(&ntd.tree_structure.root(), &0).unwrap().clone()
     }
 
 }
@@ -135,13 +304,15 @@ pub mod diaz {
 #[cfg(test)]
 mod tests{
     use crate::algorithms::diaz::DPData;
-    use crate::file_handler::file_handler::metis_to_graph;
+    use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
     #[test]
     fn test_dpdata(){
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
-        let mut test_dp_data = DPData::new(&from_graph, &to_graph);
+        let mut test_dp_data = DPData::new(&from_graph,
+                                           &create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd"),
+                                           &to_graph);
 
         test_dp_data.set(5,4,4);
         test_dp_data.set(2,3,5);
@@ -157,7 +328,9 @@ mod tests{
 
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
-        let mut test_dp_data = DPData::new(&from_graph, &to_graph);
+        let mut test_dp_data = DPData::new(&from_graph,
+                                           &create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd"),
+                                           &to_graph);
 
         // testing apply function
         // to graph has 5 Vertices
@@ -178,6 +351,11 @@ mod tests{
         // 0 * 1 + 2 * 5 + 3 * 25 + 2 * 125 = 335
         let f_3 = test_dp_data.reduce(f_2, 0);
         assert_eq!(f_3, 335);
+
+        // 3 * 1
+        let f_4 = 3;
+        // 2 * 1 + 3 * 5  = 17
+        assert_eq!(test_dp_data.extend(f_4,0,2), 17 );
 
     }
 
