@@ -124,10 +124,26 @@ pub mod file_handler {
 
         if let Ok(lines) = read_lines(filename) {
             for line in lines {
+/*
+                if let Err(e) = line{
+                    current_vertex += 1;
+                    continue;
+                }
+*/
+
                 let content = line.unwrap();
 
                 // % means comment -> ignore
-                if content.chars().next().unwrap() == '%' {continue; }
+                // empty lines are vertexes without
+                match content.chars().next() {
+                    Some('%') => {continue;}
+                    None => {
+                        current_vertex += 1;
+                        continue;
+                    }
+                    Some(_) => {}
+                }
+
                 let mut args = content.split(" ");
 
                 if number_of_vertices == 0 {
