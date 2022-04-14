@@ -60,6 +60,7 @@ pub mod graph_structures {
         #[derive(PartialEq, Eq, Debug)]
         pub struct TreeStructure {
             number_of_nodes: TreeNode,
+            number_of_vertices: usize,
             node_data: HashMap<TreeNode, NodeData>,
             children_list: HashMap<TreeNode, Vec<TreeNode>>,
             parents_list: HashMap<TreeNode, TreeNode>
@@ -69,11 +70,12 @@ pub mod graph_structures {
             /*
             Returns an empty TreeAdjacency Structure with given node size
              */
-            pub fn new(number_of_nodes: u64) -> TreeStructure {
+            pub fn new(number_of_nodes: u64, number_of_vertices: usize) -> TreeStructure {
                 if number_of_nodes == 0 { panic!("Tree needs at least one node"); }
 
                 TreeStructure {
                     number_of_nodes,
+                    number_of_vertices,
                     node_data: HashMap::new(),
                     children_list: HashMap::new(),
                     parents_list: HashMap::new(),
@@ -106,6 +108,11 @@ pub mod graph_structures {
             pub fn node_count(&self) -> TreeNode {
                 self.number_of_nodes
             }
+
+            /*
+            Returns the number of vertices of the original graph
+             */
+            pub fn vertex_code(&self) -> usize { self.number_of_vertices }
 
             /*
             returns the children of a given node
@@ -290,6 +297,9 @@ pub mod graph_structures {
                 self.tree_structure.node_type(node)
             }
 
+            /*
+            calculates the stingy ordering
+             */
             pub fn stingy_ordering(&self) -> Vec<TreeNode>{
                 self.recursive_stingy_ordering(self.tree_structure.root()).0
             }
@@ -361,7 +371,7 @@ mod tests {
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{Vertex, Bag};
 
     fn tree_adjacency_example_one() -> TreeStructure {
-        let mut ta = TreeStructure::new(10);
+        let mut ta = TreeStructure::new(10, 4);
         let mut ntd = create_ntd_from_file("data/nice_tree_decompositions/example.ntd");
         ta = ntd.unwrap().tree_structure;
         ta
