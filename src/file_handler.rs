@@ -33,7 +33,7 @@ pub mod file_handler {
         let mut max_bag_size = 0;
         let mut number_of_vertices = 0;
         
-        let mut tree_structure : TreeStructure = TreeStructure::new(1);
+        let mut tree_structure : TreeStructure = TreeStructure::new(1, 1);
 
         if let Ok(lines) = read_lines(filename){
             for line in lines {
@@ -48,7 +48,7 @@ pub mod file_handler {
                         number_of_vertices = args.next().unwrap().parse::<u64>().unwrap();
                         
                         // Create the tree structure
-                        tree_structure = TreeStructure::new(number_of_nodes);
+                        tree_structure = TreeStructure::new(number_of_nodes, number_of_vertices.try_into().unwrap());
                     },
                     Some("n") => {
                         let nr = args.next().unwrap().parse::<u32>().unwrap() - 1;
@@ -187,7 +187,7 @@ mod tests {
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NodeType::{Forget, Introduce, Join, Leaf};
 
     fn tree_adjacency_example_one() -> TreeStructure {
-        let mut ta = TreeStructure::new(10);
+        let mut ta = TreeStructure::new(10, 4);
         ta.set_node_data(0, Leaf, Bag::from([Vertex::new(0)]));
         ta.set_node_data(1,
                          Introduce, Bag::from([Vertex::new(0), Vertex::new(1)]));

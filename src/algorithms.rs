@@ -123,19 +123,41 @@ pub mod diaz {
 
     }
 
+
+
+    /*
+    Generates the set of all possible edges given a nice tree decomposition
+     */
+    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<Vec<bool>>{
+        let number_of_nodes = ntd.tree_structure.vertex_code();
+        let stingy_ordering = ntd.stingy_ordering();
+        let mut matrix = vec![vec![false; number_of_nodes as usize]; number_of_nodes as usize];
+
+        for p in stingy_ordering {
+            // kartesian product
+            for u in ntd.bag(p).unwrap(){
+                for v in ntd.bag(p).unwrap(){
+                    matrix[u.index()][v.index()] = true;
+                }
+            }
+        }
+        matrix
+    }
+
+
     /*
     Based on the following algorithm of Diaz, Serna, Thilikos
     https://www.sciencedirect.com/science/article/pii/S0304397502000178?via%3Dihub
 
-    1. Use Hashmaps for representing the mappings
+    1. Use Integerfunctions
      */
     pub fn diaz(from_graph : &MatrixGraph<(),(), Undirected>, ntd : NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> u64
     {
-        let stingy_order = ntd.stingy_ordering();
+        let stingy_ordering = ntd.stingy_ordering();
 
         let mut table = DPData::new( from_graph, to_graph, &ntd);
 
-        for p in stingy_order{
+        for p in stingy_ordering {
             match ntd.node_type(p){
                 Some(NodeType::Leaf) => {
                     let unique_vertex = ntd.bag(p).unwrap().iter().next().unwrap();
@@ -296,7 +318,7 @@ pub mod diaz {
 
 #[cfg(test)]
 mod tests{
-    use crate::algorithms::diaz::DPData;
+    use crate::algorithms::diaz::{DPData, generate_edges};
     use crate::{diaz, file_handler};
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
@@ -372,5 +394,11 @@ mod tests{
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let i = diaz(&from_graph, ntd, &to_graph);
         assert_eq!(i,256);
+    }
+
+    #[test]
+    fn test_generate_edges(){
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        println!("{:?}", generate_edges(ntd));
     }
 }
