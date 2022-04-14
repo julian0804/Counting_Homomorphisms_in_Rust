@@ -197,8 +197,6 @@ pub mod diaz {
 
                     for f_q in 0..table.max_bag_mappings(q){
                         for a in 0..to_graph.node_count(){
-
-
                             let test_condition = {
                                 let mut t = true;
 
@@ -296,19 +294,21 @@ pub mod diaz {
 }
 
 
-
 #[cfg(test)]
 mod tests{
     use crate::algorithms::diaz::DPData;
+    use crate::{diaz, file_handler};
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
     #[test]
     fn test_dpdata(){
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let mut test_dp_data = DPData::new(&from_graph,
-                                           &create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd"),
-                                           &to_graph);
+                                                    &to_graph,
+                                           &ntd,
+                                           );
 
         test_dp_data.set(5,4,4);
         test_dp_data.set(2,3,5);
@@ -319,14 +319,18 @@ mod tests{
         assert_eq!(*test_dp_data.get(&9,&12).unwrap(), 3);
     }
 
+
     #[test]
     fn test_integer_functions(){
 
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let mut test_dp_data = DPData::new(&from_graph,
-                                           &create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd"),
-                                           &to_graph);
+                                                    &to_graph,
+                                           &ntd,
+                                           );
+
 
         // testing apply function
         // to graph has 5 Vertices
@@ -355,4 +359,18 @@ mod tests{
 
     }
 
+    #[test]
+    fn test_diaz(){
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,1280);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_3.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_3.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,256);
+    }
 }
