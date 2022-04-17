@@ -6,6 +6,7 @@ pub mod diaz {
     use std::iter::Map;
     use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
+    use itertools::Itertools;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode, Vertex};
 
     pub type Mapping = u64;
@@ -151,6 +152,29 @@ pub mod diaz {
         }
         edge_list
     }
+
+    /*
+    Generates graphs based on a list of possible edge list and the number of vertices
+    Used for generating H_\tau
+     */
+    pub fn generate_graphs(possible_edges : Vec<(usize,usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
+
+        let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
+
+        for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
+
+            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
+            for (u,v) in edges{
+                graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
+            }
+
+            graphs.push(graph);
+        }
+
+        graphs
+        
+    }
+
 
 
     /*

@@ -13,7 +13,7 @@ pub mod graph_structures {
         pub(crate) type Vertex = NodeIndex;
         pub(crate) type Bag = HashSet<Vertex>;
 
-        #[derive(PartialEq, Eq, Debug)]
+        #[derive(PartialEq, Eq, Debug, Clone)]
         pub enum NodeType {
             Leaf,
             Introduce,
@@ -24,7 +24,7 @@ pub mod graph_structures {
         /*
         This structure contains data of a single node
          */
-        #[derive(PartialEq, Eq, Debug)]
+        #[derive(PartialEq, Eq, Debug, Clone)]
         pub struct NodeData {
             node_type: NodeType,
             bag: Bag,
@@ -57,7 +57,7 @@ pub mod graph_structures {
 
         Nodes: 0,1,...,N-1
          */
-        #[derive(PartialEq, Eq, Debug)]
+        #[derive(PartialEq, Eq, Debug, Clone)]
         pub struct TreeStructure {
             number_of_nodes: TreeNode,
             number_of_vertices: usize,
@@ -267,7 +267,7 @@ pub mod graph_structures {
         A structure organizing and containing all useful methods for the
         Nice Tree Decomposition
          */
-        #[derive(PartialEq, Eq, Debug)]
+        #[derive(PartialEq, Eq, Debug, Clone)]
         pub struct NiceTreeDecomposition{
             pub tree_structure : TreeStructure, // TODO: make it private later...
         }
