@@ -127,21 +127,29 @@ pub mod diaz {
 
     /*
     Generates the set of all possible edges given a nice tree decomposition
+    Returns a list of tuples
      */
-    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<Vec<bool>>{
+    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<(usize,usize)>{
         let number_of_nodes = ntd.tree_structure.vertex_code();
         let stingy_ordering = ntd.stingy_ordering();
-        let mut matrix = vec![vec![false; number_of_nodes as usize]; number_of_nodes as usize];
+        let mut edge_list: Vec<(usize,usize)> = vec![];
+
 
         for p in stingy_ordering {
             // kartesian product
             for u in ntd.bag(p).unwrap(){
                 for v in ntd.bag(p).unwrap(){
-                    matrix[u.index()][v.index()] = true;
+
+                    // checks if edge has already been added
+                    // we are using tuples but since we are looking at undirected graphs if we have to check both ways
+                    if !edge_list.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
+                        edge_list.push((u.index() , v.index()));
+                    }
+
                 }
             }
         }
-        matrix
+        edge_list
     }
 
 
@@ -396,9 +404,29 @@ mod tests{
         assert_eq!(i,256);
     }
 
+    // compares if two lists of edges have the same edges
+    // O(n^2)
+    fn compare_edge_lists(list1 : Vec<(usize, usize)>, list2 : Vec<(usize, usize)>) -> bool
+    {
+        //TODO: better notation we (de)reference operation
+        for (u,v) in &list1{
+            if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
+                return false;
+            }
+        }
+
+        for (u,v) in &list2{
+            if !&list1.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
+                return false;
+            }
+        }
+
+        true
+    }
+
     #[test]
     fn test_generate_edges(){
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
-        println!("{:?}", generate_edges(ntd));
+        assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)], generate_edges(ntd)));
     }
 }
