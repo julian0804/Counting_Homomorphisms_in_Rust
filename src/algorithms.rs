@@ -428,5 +428,8 @@ mod tests{
     fn test_generate_edges(){
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)], generate_edges(ntd)));
+
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
+        assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)], generate_edges(ntd)));
     }
 }
