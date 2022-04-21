@@ -187,21 +187,48 @@ pub mod diaz {
     {
         let stingy_ordering = ntd.stingy_ordering();
 
+        //println!("{:?}", stingy_ordering);
+
         let mut table = DPData::new( from_graph, to_graph, &ntd);
 
         for p in stingy_ordering {
+            //println!("################# node {:?}", &p);
+
             match ntd.node_type(p){
                 Some(NodeType::Leaf) => {
+
+                    //println!("Leaf");
+
                     let unique_vertex = ntd.bag(p).unwrap().iter().next().unwrap();
                     // be carefully, we return the number of vertices
 
                     // inserts the mapping (unique_vertex -> aim_vertex) for each
                     // aim_vertex in the aim graph
-                    for aim_vertex in 0..to_graph.node_count(){
-                        table.set(p, aim_vertex as Mapping, 1);
+
+                    // todo: Problem we need to check if the unique_vertex has a self loop or not
+                    // todo: done this by simply checking the
+                    if from_graph.has_edge(*unique_vertex, *unique_vertex){
+                        for aim_vertex in 0..to_graph.node_count(){
+                            if to_graph.has_edge(Vertex::new(aim_vertex), Vertex::new(aim_vertex))
+                            {
+                                table.set(p, aim_vertex as Mapping, 1);
+                            }
+                            else {
+                                table.set(p, aim_vertex as Mapping, 0);
+                            }
+
+                        }
                     }
+                    else {
+                        for aim_vertex in 0..to_graph.node_count(){
+                            table.set(p, aim_vertex as Mapping, 1);
+                        }
+                    }
+
+
                 },
                 Some(NodeType::Introduce) => {
+                    //println!("Introduce");
                     // TODO: make unique_child & introduced_vertex also to methods of NiceTreeDecomposition
                     // So tree_structure do not have to be public
                     let q = *ntd.tree_structure.unique_child(p).unwrap();
@@ -210,7 +237,9 @@ pub mod diaz {
                     // For calculating S_q
                     let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
                     let neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
-                    let s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(q).unwrap()).collect(); // possible error case, explanation below
+                    let mut s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(q).unwrap()).collect(); // possible error case, explanation below
+
+
                     /*
                     The abstract algorithm uses {u,v} \in  E(G_p)
                     -> I think only edges to the bag of q are necessary otherwise the separator property of the nice tree decomposition would be harmed
@@ -251,18 +280,45 @@ pub mod diaz {
 
                     for f_q in 0..table.max_bag_mappings(q){
                         for a in 0..to_graph.node_count(){
-                            let test_condition = {
-                                let mut t = true;
 
+                            //println!("old mapping {:?}, s_q {:?}", f_q,  s_q.clone() );
+                            //println!("plus mapping {:?} to {:?}", v, a);
+
+                            let test_condition = {
+                                //println!("testing condition");
+                                let mut t = true;
                                 for u in s_q.clone(){
-                                    if !to_graph.has_edge(Vertex::new(a),
-                                                          Vertex::new(table.apply(f_q,*significance_q(u) as Mapping ) as usize)){
+
+                                    let first_vertex = Vertex::new(a);
+                                    let second_vertex = Vertex::new(table.apply(f_q,*significance_q(u) as Mapping ) as usize);
+                                    //println!("{:?} mapped to {:?}", u, second_vertex);
+
+                                    //println!("checking edge ({:?}, {:?})", first_vertex, second_vertex);
+
+                                    if !to_graph.has_edge( first_vertex, second_vertex){
+                                        //println!("graph G does not have that edge");
                                         t = false;
                                         break;
                                     }
+                                    else {
+                                        //println!("graph G has that edge");
+                                    }
                                 }
+                                /*
+                                additonal sucht that self loops will be mapped on self loops
+
+                                if from_graph.has_edge(v,v) && !to_graph.has_edge(Vertex::new(a),Vertex::new(a))
+                                {
+                                    t = false;
+                                    break;
+                                }
+
+                                 */
+
                                 t
                             };
+
+
 
                             let f = table.extend(f_q, *significance_p(&v) as Mapping, a as Mapping).clone();
 
@@ -288,6 +344,7 @@ pub mod diaz {
 
                 },
                 Some(NodeType::Forget) => {
+                    //println!("Forget");
                     let q = ntd.tree_structure.unique_child(p).unwrap();
                     let v = ntd.tree_structure.forgotten_vertex(p).unwrap();
 
@@ -297,18 +354,27 @@ pub mod diaz {
 
                     let old_significance = |a : &Vertex|{
                         if let Some(i) = sorted_bag.iter().position(|i| a > i){
-                            i
+                            i + 1 // added here a plus one since i think we has some index shift here
+                            // todo: check if that is correct!
+                            // todo: check if the extend function may have an index shift
                         }
                         else {
                             sorted_bag.len()
                         }
                     };
 
+                    //println!("old signicants of {:?} is {:?}", v, old_significance(&v));
+
                     for f in 0..table.max_bag_mappings(p){
+                        //println!("summing up new mapping {:?}", f);
                         let mut sum = 0;
                         for a in 0..to_graph.node_count(){
+
                             let f_old = table.extend(f,old_significance(&v) as Mapping, a as Mapping);
-                            sum += table.get(&q, &f_old).unwrap();
+                            let additional_mappings = table.get(&q, &f_old).unwrap();
+
+                            //println!("adding old mapping {:?} with number {:?}", f_old, additional_mappings);
+                            sum += additional_mappings;
                         }
                         table.set(p, f, sum);
                     }
@@ -318,6 +384,7 @@ pub mod diaz {
 
                 },
                 Some(NodeType::Join) => {
+                    //println!("Join");
                     if let Some(children) = ntd.tree_structure.children(p){
                         let q1 = children.get(0).unwrap();
                         let q2 = children.get(1).unwrap();
@@ -340,6 +407,8 @@ pub mod diaz {
 
                 },
             }
+
+            //println!("table entries {:?}" ,table.table.get(&p).unwrap());
         }
 
         table.get(&ntd.tree_structure.root(), &0).unwrap().clone()
@@ -426,6 +495,24 @@ mod tests{
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let i = diaz(&from_graph, ntd, &to_graph);
         assert_eq!(i,256);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_4.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_5.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_6.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,0);
     }
 
     // compares if two lists of edges have the same edges
@@ -448,6 +535,7 @@ mod tests{
         true
     }
 
+
     #[test]
     fn test_generate_edges(){
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
@@ -455,5 +543,10 @@ mod tests{
 
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)], generate_edges(ntd)));
+    }
+
+    #[test]
+    fn test_generate_graphs(){
+        //todo: create a test that checks if generated graph set is correct
     }
 }
