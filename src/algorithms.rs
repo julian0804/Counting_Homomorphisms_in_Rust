@@ -414,12 +414,55 @@ pub mod diaz {
         table.get(&ntd.tree_structure.root(), &0).unwrap().clone()
     }
 
+    /*
+    a simple brute force
+     */
+    pub fn brute_force(from_graph : &MatrixGraph<(),(), Undirected>, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
+        let h = from_graph.node_count();
+        let g = to_graph.node_count();
+
+        let max = g.pow(h as u32);
+        let mut counter = 0;
+
+        let check_mapping = |f : usize|{
+
+            let mut ret = true;
+
+            for u in 0..h{
+                for v in 0..h{
+                    if from_graph.has_edge(Vertex::new(u ), Vertex::new(v )){
+
+                        let map_u = f / (g.pow(u as u32) as u64) as usize % g ;
+                        let map_v = f / (g.pow(v as u32) as u64) as usize % g ;
+
+                        println!("map edge ({:?},{:?}) onto ({:?},{:?})", u, v, map_u, map_v);
+
+                        if !to_graph.has_edge(Vertex::new(map_u), Vertex::new(map_v))
+                        {
+                            ret = false;
+                            println!("false");
+                        }
+                    }
+                }
+            }
+            ret
+        };
+
+        for f in 0..max{
+            println!("{:?}", f);
+            if check_mapping(f){counter += 1;}
+        }
+        counter
+    }
+
+
+
 }
 
 
 #[cfg(test)]
 mod tests{
-    use crate::algorithms::diaz::{DPData, generate_edges};
+    use crate::algorithms::diaz::{brute_force, DPData, generate_edges};
     use crate::{diaz, file_handler};
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
@@ -441,7 +484,6 @@ mod tests{
         assert_eq!(*test_dp_data.get(&2,&3).unwrap(), 5);
         assert_eq!(*test_dp_data.get(&9,&12).unwrap(), 3);
     }
-
 
     #[test]
     fn test_integer_functions(){
@@ -513,6 +555,45 @@ mod tests{
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_3.ntd").unwrap();
         let i = diaz(&from_graph, ntd, &to_graph);
         assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_7.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
+        let i = diaz(&from_graph, ntd, &to_graph);
+        assert_eq!(i,960);
+    }
+
+    #[test]
+    fn test_brute_force() {
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,1280);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_3.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_3.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,256);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_4.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_5.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_6.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_7.graph").unwrap();
+        let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let i = brute_force(&from_graph, &to_graph);
+        assert_eq!(i,960);
     }
 
     // compares if two lists of edges have the same edges
