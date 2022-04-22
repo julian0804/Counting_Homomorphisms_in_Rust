@@ -157,13 +157,18 @@ pub mod diaz {
     Generates graphs based on a list of possible edge list and the number of vertices
     Used for generating H_\tau
      */
-    pub fn generate_graphs(possible_edges : Vec<(usize,usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
+    pub fn generate_graphs(number_of_nodes : u64, possible_edges : Vec<(usize,usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
 
         let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
 
         for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
 
             let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
+            for i in 0..number_of_nodes{
+                graph.add_node(());
+            }
+
             for (u,v) in edges{
                 graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
             }
@@ -236,9 +241,8 @@ pub mod diaz {
 
                     // For calculating S_q
                     let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
-                    let neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
+                    let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
                     let mut s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(q).unwrap()).collect(); // possible error case, explanation below
-
 
                     /*
                     The abstract algorithm uses {u,v} \in  E(G_p)
@@ -303,17 +307,16 @@ pub mod diaz {
                                     else {
                                         //println!("graph G has that edge");
                                     }
-                                }
-                                /*
-                                additonal sucht that self loops will be mapped on self loops
 
+
+                                }
+
+                                //additonal sucht that self loops will be mapped on self loops
                                 if from_graph.has_edge(v,v) && !to_graph.has_edge(Vertex::new(a),Vertex::new(a))
                                 {
                                     t = false;
-                                    break;
                                 }
 
-                                 */
 
                                 t
                             };
@@ -418,8 +421,11 @@ pub mod diaz {
     a simple brute force
      */
     pub fn brute_force(from_graph : &MatrixGraph<(),(), Undirected>, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
+
         let h = from_graph.node_count();
         let g = to_graph.node_count();
+
+        // println!("h = {:?}, g = {:?}", h, g);
 
         let max = g.pow(h as u32);
         let mut counter = 0;
@@ -435,12 +441,12 @@ pub mod diaz {
                         let map_u = f / (g.pow(u as u32) as u64) as usize % g ;
                         let map_v = f / (g.pow(v as u32) as u64) as usize % g ;
 
-                        println!("map edge ({:?},{:?}) onto ({:?},{:?})", u, v, map_u, map_v);
+                        //println!("map edge ({:?},{:?}) onto ({:?},{:?})", u, v, map_u, map_v);
 
                         if !to_graph.has_edge(Vertex::new(map_u), Vertex::new(map_v))
                         {
                             ret = false;
-                            println!("false");
+                            // println!("false");
                         }
                     }
                 }
@@ -449,7 +455,6 @@ pub mod diaz {
         };
 
         for f in 0..max{
-            println!("{:?}", f);
             if check_mapping(f){counter += 1;}
         }
         counter
