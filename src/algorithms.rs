@@ -1,3 +1,57 @@
+//! Algorithms for counting graph homomorphisms
+//!
+
+
+/// A module containing operations for working with integer functions as
+/// presented in the paper "Counting subgraph patterns in large graphs" by
+/// Emil Ruhwald Nielsen, Otto Stadel Clausen and Elisabeth Terp Reeve.
+pub mod integer_functions {
+    use std::iter::Map;
+
+    /// Defining the type Mapping to distinguish the operation from normal u64 variables.
+    pub type Mapping = u64;
+
+    /// Given the integer function f of basis n. Apply returns the digit with significance s.
+    /// This is achieved by by shifting all digits s positions to the right and then take the rest
+    /// of the division by n which removes the least significant digit.
+    pub fn apply(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
+        ( f / (n.pow(s as u32) as u64) ) % n
+    }
+
+    /// Given the integer function f of basis n. Extend increases the number of digits by one.
+    /// This will be done by shifting all digits with significance higher than s one position
+    /// to the left(increase their significance by one). Then the digit with significance s will
+    /// be set to v
+    pub fn extend(n : Mapping, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
+        let r = f % (n.pow(s as u32) as Mapping);
+        let l = f - r;
+        (n * l) + (n.pow(s as u32) as Mapping) * v + r
+    }
+
+    /// Given the integer function f of basis n. Reduce decreases the number of digits by one.
+    /// This will be done by deleting the digit with significance s and then shifting all digits
+    /// with higher significance one to the right (decrease their significance by one).
+    pub fn reduce(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
+        let r = f % n.pow(s as u32);
+        let l = f - (f % n.pow((s + 1) as u32));
+        (l / n) + r
+    }
+
+    /// Returns the maximal amount of mappings from a set of d elements to
+    /// a set of n elements. This mappings can be represented by the integers
+    /// {0,1,...,max_mapping - 1}
+    pub fn max_mappings(d : Mapping, n : Mapping) -> Mapping{
+       n.pow(d as u32)
+    }
+}
+
+pub mod brute_force_homomorphism_counter{
+
+}
+
+pub mod first_approach{
+
+}
 
 pub mod diaz {
     use std::borrow::Borrow;
@@ -7,6 +61,7 @@ pub mod diaz {
     use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
     use itertools::Itertools;
+    use crate::algorithms::integer_functions;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode, Vertex};
 
     pub type Mapping = u64;
@@ -50,21 +105,11 @@ pub mod diaz {
             }
         }
 
-
         /*
-        The Following operations work on integer functions
-        mappings from a bag to a graph are represented as simple integers
-
-        based on  **Counting subgraph patterns in large graphs**
-
-         */
-
-        /*
-        Returns digit of mapping f with significance s
+        Returns digit of mapping f with significance s of basis b
          */
         pub fn apply(&self, f : Mapping, s : Mapping) -> Mapping{
-            // TODO: ugly safe casting
-            f / (self.to_graph.node_count().pow(s as u32) as u64) % (self.to_graph.node_count() as u64)
+            integer_functions::apply(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /*
@@ -73,10 +118,7 @@ pub mod diaz {
         digit with significance s equal to v."
          */
         pub fn extend(&self, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
-            let n = self.to_graph.node_count();
-            let r = f % (n.pow(s as u32) as Mapping);
-            let l = f - r;
-            ((n as Mapping) * l) + (n.pow(s as u32) as Mapping) * v + r
+            integer_functions::extend(self.to_graph.node_count() as Mapping, f, s, v)
         }
 
         /*
@@ -84,10 +126,7 @@ pub mod diaz {
         all digits with higher significance one position to the right."
          */
         pub fn reduce(&self, f : Mapping, s : Mapping) -> Mapping{
-            let n = self.to_graph.node_count();
-            let r = f % (n.pow(s as u32) as Mapping);
-            let l = f - (f % n.pow((s + 1) as u32) as u64);
-            l / (n as Mapping) + r
+            integer_functions::reduce(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /*
@@ -95,9 +134,8 @@ pub mod diaz {
         for the iterators
          */
         pub fn max_bag_mappings(&self, node : TreeNode) -> Mapping{
-            let bag_size = self.nice_tree_decomposition.bag(node).unwrap().len();
-            let number_of_vertices = self.to_graph.node_count();
-            number_of_vertices.pow(bag_size as u32) as Mapping
+            integer_functions::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
+                                            self.to_graph.node_count() as Mapping )
         }
 
         /*
