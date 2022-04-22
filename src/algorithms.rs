@@ -6,7 +6,6 @@
 /// presented in the paper "Counting subgraph patterns in large graphs" by
 /// Emil Ruhwald Nielsen, Otto Stadel Clausen and Elisabeth Terp Reeve.
 pub mod integer_functions {
-    use std::iter::Map;
 
     /// Defining the type Mapping to distinguish the operation from normal u64 variables.
     pub type Mapping = u64;
@@ -45,15 +44,17 @@ pub mod integer_functions {
     }
 }
 
-/// A module containing brute force homomorphism counter functions
+/// A module containing brute force homomorphism counter
 pub mod brute_force_homomorphism_counter{
 
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
+    use crate::algorithms::integer_functions;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::Vertex;
 
     /// a simple brute force algorithm which iterates over all possible mappings from "from_graph" to "to_graph"
-    /// todo: a possible improvement would be to first seperate the graph in its connected components and then execute this algo for each of them
+    /// todo: a possible improvement would be to first seperate the graph into its connected components and then execute this algo for each of them
+    /// todo: generalize them for more graph types
     pub fn simple_brute_force(from_graph : &MatrixGraph<(),(), Undirected>, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
 
         let h = from_graph.node_count();
@@ -68,6 +69,7 @@ pub mod brute_force_homomorphism_counter{
                 for v in 0..h{
                     if from_graph.has_edge(Vertex::new(u ), Vertex::new(v )){
 
+                        // this is basically the apply functions of the integer functions
                         let map_u = f / (g.pow(u as u32) as u64) as usize % g ;
                         let map_v = f / (g.pow(v as u32) as u64) as usize % g ;
 
