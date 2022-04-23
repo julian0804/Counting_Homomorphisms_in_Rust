@@ -6,6 +6,7 @@
 /// presented in the paper "Counting subgraph patterns in large graphs" by
 /// Emil Ruhwald Nielsen, Otto Stadel Clausen and Elisabeth Terp Reeve.
 pub mod integer_functions {
+    use std::collections::HashMap;
 
     /// Defining the type Mapping to distinguish the operation from normal u64 variables.
     pub type Mapping = u64;
@@ -43,21 +44,23 @@ pub mod integer_functions {
        n.pow(d as u32)
     }
 
-    /// Takes an mapping fn to the base n as input and returns the mapping in a readable form
-    /// todo: could be done more efficiently
-    pub fn debug_mapping(n : Mapping, f : Mapping) -> Vec<(Mapping, Mapping)>{
+    /// Takes an mapping f to the base n as input and returns the mapping as a hashmap
+    pub fn to_hashmap(n : Mapping, f : Mapping) -> HashMap<Mapping,Mapping>{
+        let mut mapping = HashMap::new();
 
-        // Returns the number of digits the mapping would have in base n
-        let max_digit = ((f as f64).log(n as f64)) as Mapping + 1;
+        let mut rest = f;
+        let mut pos = 0;
 
-        let mut result : Vec<(Mapping, Mapping)> = vec![];
-
-        for s in 0..max_digit{
-            let image = apply(n,f,s);
-            result.push((s,image));
+        // this follows the simple iterative method of getting the representation of the number f
+        // to the basis of n
+        // see also: https://www.ics.uci.edu/~irani/w17-6D/BoardNotes/12_NumberRepresentationPost.pdf
+        while rest > 0 {
+            mapping.insert(pos, rest % n);
+            pos += 1;
+            rest = rest / n;
         }
 
-        result
+        mapping
     }
 }
 
@@ -208,20 +211,6 @@ pub mod diaz {
             v.sort();
             v.iter().map(|e| **e).collect()
         }
-
-
-        /*
-        A function mapping the integer function on to a tuple
-         */
-        pub fn debug_mapping(&self, f : Mapping, sig : Mapping) -> Vec<(Mapping,Mapping)>{
-            let mut vec = Vec::new();
-            for i in 0..(sig){
-                vec.push((i as Mapping, self.apply(f, i as Mapping)));
-            }
-            vec
-        }
-
-
     }
 
 
@@ -523,6 +512,13 @@ pub mod diaz {
 
 #[cfg(test)]
 mod tests{
+
+    /*
+    useful commands
+    - cargo test : runs unit tests
+    - cargo test -- --nocapture : runs unit tests and produces the hidden outputs such as println!
+     */
+
     use itertools::interleave;
     use crate::algorithms::diaz::{DPData, generate_edges};
     use crate::{diaz, file_handler, simple_brute_force};
@@ -589,10 +585,25 @@ mod tests{
         // 1 * 16 + 2 * 8 + 1 * 1 = 25
         let f_7 = integer_functions::reduce(n, f_6, 0);
         assert_eq!(f_7, 25);
+
+        // check if converting to hashmap is correct
+        let f_8 = 1626;
+        let n = 5;
+        let map = integer_functions::to_hashmap(n, f_8);
+
+        println!("{:?}", map);
+
+        assert_eq!(*map.get(&0).unwrap(), 1);
+        assert_eq!(*map.get(&1).unwrap(), 0);
+        assert_eq!(*map.get(&2).unwrap(), 0);
+        assert_eq!(*map.get(&3).unwrap(), 3);
+        assert_eq!(*map.get(&4).unwrap(), 2);
+
+
     }
 
     #[test]
-    fn test_integer_functions_in_DPData(){
+    fn test_integer_functions_in_dpdata(){
 
 
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
