@@ -42,6 +42,23 @@ pub mod integer_functions {
     pub fn max_mappings(d : Mapping, n : Mapping) -> Mapping{
        n.pow(d as u32)
     }
+
+    /// Takes an mapping fn to the base n as input and returns the mapping in a readable form
+    /// todo: could be done more efficiently
+    pub fn debug_mapping(n : Mapping, f : Mapping) -> Vec<(Mapping, Mapping)>{
+
+        // Returns the number of digits the mapping would have in base n
+        let max_digit = ((f as f64).log(n as f64)) as Mapping + 1;
+
+        let mut result : Vec<(Mapping, Mapping)> = vec![];
+
+        for s in 0..max_digit{
+            let image = apply(n,f,s);
+            result.push((s,image));
+        }
+
+        result
+    }
 }
 
 /// A module containing brute force homomorphism counter
@@ -506,8 +523,11 @@ pub mod diaz {
 
 #[cfg(test)]
 mod tests{
-    use crate::algorithms::diaz::{brute_force, DPData, generate_edges};
-    use crate::{diaz, file_handler};
+    use itertools::interleave;
+    use crate::algorithms::diaz::{DPData, generate_edges};
+    use crate::{diaz, file_handler, simple_brute_force};
+    use crate::algorithms::integer_functions;
+    use crate::algorithms::brute_force_homomorphism_counter;
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
     #[test]
@@ -531,6 +551,49 @@ mod tests{
 
     #[test]
     fn test_integer_functions(){
+
+
+        let n = 5;
+        // 2 * 125 + 3 * 25 + 0 * 5 + 3 * 1    = 328
+        let f : u64 = 328;
+
+        assert_eq!(integer_functions::apply(n, f,0),3);
+        assert_eq!(integer_functions::apply(n, f,1),0);
+        assert_eq!(integer_functions::apply(n, f,2),3);
+        assert_eq!(integer_functions::apply(n, f,3),2);
+
+        // 3 * 1 + 0 * 5 + 3 * 25 + 2 * 125 = 328
+        // -> 3 * 1 + 0 * 5 + (2 * 25) + 3 * 125 + 2 * 625 = 1678
+        let f_2 = integer_functions::extend(n, f,2, 2);
+        assert_eq!(f_2, 1678);
+
+        // 3 * 1 + 0 * 5 + (2 * 25) + 3 * 125 + 2 * 625 = 1678
+        // 0 * 1 + 2 * 5 + 3 * 25 + 2 * 125 = 335
+        let f_3 = integer_functions::reduce(n, f_2, 0);
+        assert_eq!(f_3, 335);
+
+        // 3 * 1
+        let f_4 = 3;
+        // 2 * 1 + 3 * 5  = 17
+        assert_eq!(integer_functions::extend(n,f_4,0,2), 17 );
+
+        let n = 4;
+        // 1 * 16 + 1 * 4 + 1 * 1 = 21
+        let f_5 = 21;
+        assert_eq!(integer_functions::apply(n, f_5, 1), 1);
+
+        // 1 * 64 + 2 * 16 + 1 * 4 + 1 * 1 = 101
+        let f_6 = integer_functions::extend(n, f_5, 2, 2);
+        assert_eq!(f_6, 101);
+
+        // 1 * 16 + 2 * 8 + 1 * 1 = 25
+        let f_7 = integer_functions::reduce(n, f_6, 0);
+        assert_eq!(f_7, 25);
+    }
+
+    #[test]
+    fn test_integer_functions_in_DPData(){
+
 
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
@@ -565,6 +628,8 @@ mod tests{
         let f_4 = 3;
         // 2 * 1 + 3 * 5  = 17
         assert_eq!(test_dp_data.extend(f_4,0,2), 17 );
+
+
 
     }
 
@@ -611,32 +676,32 @@ mod tests{
     fn test_brute_force() {
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,1280);
 
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_3.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_3.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,256);
 
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_4.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_5.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_6.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_4.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/from_7.graph").unwrap();
         let to_graph = file_handler::file_handler::metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
-        let i = brute_force(&from_graph, &to_graph);
+        let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,960);
     }
 
@@ -644,7 +709,7 @@ mod tests{
     // O(n^2)
     fn compare_edge_lists(list1 : Vec<(usize, usize)>, list2 : Vec<(usize, usize)>) -> bool
     {
-        //TODO: better notation we (de)reference operation
+        //TODO: better notation with (de)reference operation
         for (u,v) in &list1{
             if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
                 return false;
