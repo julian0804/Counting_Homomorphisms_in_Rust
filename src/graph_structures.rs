@@ -112,7 +112,7 @@ pub mod graph_structures {
             /*
             Returns the number of vertices of the original graph
              */
-            pub fn vertex_code(&self) -> usize { self.number_of_vertices }
+            pub fn vertex_count(&self) -> usize { self.number_of_vertices }
 
             /*
             returns the children of a given node

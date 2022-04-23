@@ -220,7 +220,7 @@ pub mod diaz {
     Returns a list of tuples
      */
     pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<(usize,usize)>{
-        let number_of_nodes = ntd.tree_structure.vertex_code();
+        let number_of_nodes = ntd.tree_structure.vertex_count();
         let stingy_ordering = ntd.stingy_ordering();
         let mut edge_list: Vec<(usize,usize)> = vec![];
 
