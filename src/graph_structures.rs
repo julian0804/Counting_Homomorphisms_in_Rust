@@ -305,6 +305,42 @@ pub mod graph_structures {
             }
 
             /*
+            Interfacing the unique child method of self.tree_structure
+             */
+            pub fn unique_child(&self, node : TreeNode) -> Option<&TreeNode>{
+               self.tree_structure.unique_child(node)
+            }
+
+            /*
+            Interfacing the introduced_vertex method of self.tree_structure
+             */
+            pub fn introduced_vertex(&self, node : TreeNode) -> Option<Vertex>{
+                self.tree_structure.introduced_vertex(node)
+            }
+
+            /*
+            Interfacing the forgotten_vertex method of self.tree_structure
+             */
+            pub fn forgotten_vertex(&self, node : TreeNode) -> Option<Vertex>{
+                self.tree_structure.forgotten_vertex(node)
+            }
+
+            /*
+            Interfacing the children method of self.tree_structure
+             */
+            pub fn children(&self, node : TreeNode) -> Option<&Vec<TreeNode>> {
+                self.tree_structure.children(node)
+            }
+
+            /*
+            Interfacing the root method of self.tree_structure
+             */
+            pub fn root(&self) -> TreeNode{
+                self.tree_structure.root()
+            }
+
+
+            /*
             recursively calculating stingy ordering by returning (stingy_ordering, branch_number)
              */
             pub fn recursive_stingy_ordering(&self, current_node: TreeNode) -> (Vec<TreeNode>, TreeNode)

@@ -405,10 +405,9 @@ pub mod diaz {
                 },
                 Some(NodeType::Introduce) => {
                     //println!("Introduce");
-                    // TODO: make unique_child & introduced_vertex also to methods of NiceTreeDecomposition
                     // So tree_structure do not have to be public
-                    let q = *ntd.tree_structure.unique_child(p).unwrap();
-                    let v = ntd.tree_structure.introduced_vertex(p).unwrap();
+                    let q = *ntd.unique_child(p).unwrap();
+                    let v = ntd.introduced_vertex(p).unwrap();
 
                     // For calculating S_q
                     let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
@@ -519,8 +518,8 @@ pub mod diaz {
                 },
                 Some(NodeType::Forget) => {
                     //println!("Forget");
-                    let q = ntd.tree_structure.unique_child(p).unwrap();
-                    let v = ntd.tree_structure.forgotten_vertex(p).unwrap();
+                    let q = ntd.unique_child(p).unwrap();
+                    let v = ntd.forgotten_vertex(p).unwrap();
 
                     // transforms the bag into a sorted vertex used for integer functions
                     let sorted_bag = table.sorted_bag(p);
@@ -559,7 +558,7 @@ pub mod diaz {
                 },
                 Some(NodeType::Join) => {
                     //println!("Join");
-                    if let Some(children) = ntd.tree_structure.children(p){
+                    if let Some(children) = ntd.children(p){
                         let q1 = children.get(0).unwrap();
                         let q2 = children.get(1).unwrap();
 
@@ -585,10 +584,8 @@ pub mod diaz {
             //println!("table entries {:?}" ,table.table.get(&p).unwrap());
         }
 
-        table.get(&ntd.tree_structure.root(), &0).unwrap().clone()
+        table.get(&ntd.root(), &0).unwrap().clone()
     }
-
-
 
 }
 
