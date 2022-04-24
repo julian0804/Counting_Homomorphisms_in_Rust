@@ -131,6 +131,8 @@ pub mod generation {
 
 pub mod first_approach{
     use std::collections::HashMap;
+    use petgraph::matrix_graph::MatrixGraph;
+    use petgraph::Undirected;
     use crate::algorithms::integer_functions::Mapping;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, TreeNode};
 
@@ -139,13 +141,15 @@ pub mod first_approach{
         // table[p,e,phi], p = tree node, e = subset of edges represented by an integer, phi = mapping
         table : HashMap<TreeNode, HashMap<(u64, Mapping), u64>>,
         nice_tree_decomposition : &'a NiceTreeDecomposition,
+        to_graph : &'a MatrixGraph<(),(), Undirected>,
     }
 
     impl<'a> DPData<'a>{
 
         /// a basic constructor which takes only the nice tree decomposition as an argument
-        pub fn new<'b>(nice_tree_decomposition : &'b NiceTreeDecomposition) -> DPData<'b>{
-            DPData{table : HashMap::new(), nice_tree_decomposition}
+        pub fn new<'b>(nice_tree_decomposition : &'b NiceTreeDecomposition,
+                       to_graph : &'b MatrixGraph<(),(), Undirected>) -> DPData<'b>{
+            DPData{table : HashMap::new(), nice_tree_decomposition, to_graph}
         }
 
         /// given p = tree node, e = subset of edges represented by an integer, phi = mapping
@@ -318,10 +322,6 @@ pub mod diaz {
             v.iter().map(|e| **e).collect()
         }
     }
-
-
-
-
 
 
     /*
@@ -582,7 +582,8 @@ mod tests{
     #[test]
     fn test_my_approach_dpdata(){
         let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
-        let mut test_dp_data =  first_approach::DPData::new(&ntd);
+        let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
+        let mut test_dp_data =  first_approach::DPData::new(&ntd, &to_graph);
 
 
         assert_eq!(test_dp_data.get(1,1,1), None);
