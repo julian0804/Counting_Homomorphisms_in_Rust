@@ -10,9 +10,10 @@ use petgraph::dot::{Dot, Config};
 use petgraph::graph::NodeIndex;
 use petgraph::matrix_graph::*;
 use petgraph::matrix_graph::MatrixGraph;
-use crate::algorithms::diaz::{diaz, generate_edges, generate_graphs};
+use crate::algorithms::diaz::{diaz};
 use std::time::{Duration, Instant};
 use crate::algorithms::brute_force_homomorphism_counter::simple_brute_force;
+use crate::algorithms::generation::{generate_edges, generate_graphs};
 
 fn main(){
 
@@ -22,21 +23,22 @@ fn main(){
 
     let start = Instant::now();
     let graphs = generate_graphs(5, generate_edges(ntd.clone()));
+    let duration = start.elapsed();
+    println!("time needed for graph generation: {:?}", duration);
 
-
-
+    let start = Instant::now();
     for h in &graphs{
-
-
-       //println!("h : {:?}", Dot::new(h));
-
-        let diaz = diaz(h,ntd.clone(), &g);
         let brute_force = simple_brute_force(h,&g);
-
-        println!("diaz: {:?}, brute force: {:?}", diaz, brute_force);
-        if diaz != brute_force{ println!("wrong");}
-
     }
     let duration = start.elapsed();
-    println!("{:?} homomorphism numbers have been calculated in time {:?}", graphs.len(), duration);
+    println!("{:?} homomorphism numbers have been calculated with brute force algorithm in time {:?}", graphs.len(), duration);
+
+    let start = Instant::now();
+    for h in &graphs{
+        let diaz = diaz(h,ntd.clone(), &g);
+    }
+    let duration = start.elapsed();
+    println!("{:?} homomorphism numbers have been calculated with diaz algorithm in time {:?}", graphs.len(), duration);
+
+
 }
