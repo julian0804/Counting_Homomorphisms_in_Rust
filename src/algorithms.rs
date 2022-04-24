@@ -64,6 +64,116 @@ pub mod integer_functions {
     }
 }
 
+/// A module containing all functions for explicit edge and graph generation.
+pub mod generation {
+    use itertools::Itertools;
+    use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
+    use petgraph::Undirected;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::NiceTreeDecomposition;
+
+    /// Given a nice tree decomposition ntd, this function generates all possible edges
+    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<(usize, usize)>{
+
+        // Traversing all nodes of a 
+        let stingy_ordering = ntd.stingy_ordering();
+        let mut edge_list: Vec<(usize,usize)> = vec![];
+
+
+        for p in stingy_ordering {
+            // cartesian product of all vertices in the bag of p
+            for u in ntd.bag(p).unwrap(){
+                for v in ntd.bag(p).unwrap(){
+
+                    // checks if edge has already been added
+                    // we are using tuples but since we are looking at undirected graphs if we have to check both ways
+                    // todo: Can we remove the .index() here and use the node_index directly?
+                    if !edge_list.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
+                        edge_list.push((u.index() , v.index()));
+                    }
+
+                }
+            }
+        }
+        edge_list
+    }
+
+
+    /// Given a number of vertices and a set of possible edges this function computes all graphs
+    /// with a subset of the possible edges and the same number of vertices.
+    pub fn generate_graphs(number_of_vertices: u64, possible_edges : Vec<(usize, usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
+
+        let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
+
+        // iterate over the powerset of possible edges
+        for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
+
+            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
+            // add vertices
+            for i in 0..number_of_vertices {
+                graph.add_node(());
+            }
+
+            // add edges
+            for (u,v) in edges{
+                graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
+            }
+
+            graphs.push(graph);
+        }
+
+        graphs
+
+    }
+
+
+}
+
+pub mod first_approach{
+    use std::collections::HashMap;
+    use crate::algorithms::integer_functions::Mapping;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, TreeNode};
+
+    /// a structure containing all necessary data for the Dynamic Program
+    pub(crate) struct DPData<'a>{
+        // table[p,e,phi], p = tree node, e = subset of edges represented by an integer, phi = mapping
+        table : HashMap<TreeNode, HashMap<(u64, Mapping), u64>>,
+        nice_tree_decomposition : &'a NiceTreeDecomposition,
+    }
+
+    impl<'a> DPData<'a>{
+
+        /// a basic constructor which takes only the nice tree decomposition as an argument
+        pub fn new<'b>(nice_tree_decomposition : &'b NiceTreeDecomposition) -> DPData<'b>{
+            DPData{table : HashMap::new(), nice_tree_decomposition}
+        }
+
+        /// given p = tree node, e = subset of edges represented by an integer, phi = mapping
+        /// this functions returns the entry : table[p,e,phi]
+        pub fn get(&self, node : TreeNode, edge_set : u64 , mapping : Mapping) -> Option<&u64> {
+
+            if let Some(node_data) = self.table.get(&node){
+                node_data.get(&(edge_set, mapping))
+            }
+            else { None }
+        }
+
+        /// sets the entry table[p,e,phi] to value
+        pub fn set(&mut self, node : TreeNode, edge_set : u64 , mapping : Mapping, value : u64) {
+            if let Some(node_data) = self.table.get_mut(&node)
+            {
+                node_data.insert((edge_set,mapping), value);
+            }
+            else {
+                self.table.insert(node, HashMap::from([ ((edge_set, mapping),value) ]));
+            }
+        }
+
+
+
+    }
+}
+
 /// A module containing brute force homomorphism counter
 pub mod brute_force_homomorphism_counter{
 
@@ -112,10 +222,6 @@ pub mod brute_force_homomorphism_counter{
         }
         counter
     }
-}
-
-pub mod first_approach{
-
 }
 
 pub mod diaz {
@@ -215,59 +321,6 @@ pub mod diaz {
 
 
 
-    /*
-    Generates the set of all possible edges given a nice tree decomposition
-    Returns a list of tuples
-     */
-    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<(usize,usize)>{
-        let stingy_ordering = ntd.stingy_ordering();
-        let mut edge_list: Vec<(usize,usize)> = vec![];
-
-
-        for p in stingy_ordering {
-            // kartesian product of all vertices in the bag of p
-            // this equals all possible edges this bag provides
-            for u in ntd.bag(p).unwrap(){
-                for v in ntd.bag(p).unwrap(){
-
-                    // checks if edge has already been added
-                    // we are using tuples but since we are looking at undirected graphs if we have to check both ways
-                    if !edge_list.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
-                        edge_list.push((u.index() , v.index()));
-                    }
-
-                }
-            }
-        }
-        edge_list
-    }
-
-    /*
-    Generates graphs based on a list of possible edge list and the number of vertices
-    Used for generating H_\tau
-     */
-    pub fn generate_graphs(number_of_nodes : u64, possible_edges : Vec<(usize,usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
-
-        let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
-
-        for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
-
-            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
-
-            for i in 0..number_of_nodes{
-                graph.add_node(());
-            }
-
-            for (u,v) in edges{
-                graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
-            }
-
-            graphs.push(graph);
-        }
-
-        graphs
-        
-    }
 
 
 
@@ -520,14 +573,31 @@ mod tests{
      */
 
     use itertools::interleave;
-    use crate::algorithms::diaz::{DPData, generate_edges};
-    use crate::{diaz, file_handler, simple_brute_force};
-    use crate::algorithms::integer_functions;
+    use crate::algorithms::diaz::{DPData};
+    use crate::{diaz, file_handler, generate_edges, simple_brute_force};
+    use crate::algorithms::{first_approach, integer_functions};
     use crate::algorithms::brute_force_homomorphism_counter;
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
     #[test]
-    fn test_dpdata(){
+    fn test_my_approach_dpdata(){
+        let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let mut test_dp_data =  first_approach::DPData::new(&ntd);
+
+
+        assert_eq!(test_dp_data.get(1,1,1), None);
+        assert_eq!(test_dp_data.get(1,2,3), None);
+
+        test_dp_data.set(1,1,1,5);
+        test_dp_data.set(1,2,3,4);
+
+        assert_eq!(*test_dp_data.get(1,1,1).unwrap(), 5);
+        assert_eq!(*test_dp_data.get(1,2,3).unwrap(), 4);
+
+    }
+
+    #[test]
+    fn test_diaz_dpdata(){
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = metis_to_graph("data/metis_graphs/to_2.graph").unwrap();
         let ntd = create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
@@ -603,7 +673,7 @@ mod tests{
     }
 
     #[test]
-    fn test_integer_functions_in_dpdata(){
+    fn test_integer_functions_in_diaz_dpdata(){
 
 
         let from_graph = metis_to_graph("data/metis_graphs/from_2.graph").unwrap();
