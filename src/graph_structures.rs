@@ -63,7 +63,7 @@ pub mod graph_structures {
             number_of_vertices: usize,
             node_data: HashMap<TreeNode, NodeData>,
             children_list: HashMap<TreeNode, Vec<TreeNode>>,
-            parents_list: HashMap<TreeNode, TreeNode>
+            parents_list: HashMap<TreeNode, TreeNode>,
         }
 
         impl TreeStructure {
