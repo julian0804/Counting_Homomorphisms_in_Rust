@@ -133,8 +133,9 @@ pub mod first_approach{
     use std::collections::HashMap;
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
+    use crate::algorithms::integer_functions;
     use crate::algorithms::integer_functions::Mapping;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, TreeNode};
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, TreeNode, Vertex};
 
     /// a structure containing all necessary data for the Dynamic Program
     pub(crate) struct DPData<'a>{
@@ -144,6 +145,7 @@ pub mod first_approach{
         to_graph : &'a MatrixGraph<(),(), Undirected>,
     }
 
+    /// implementation of methods on DPData
     impl<'a> DPData<'a>{
 
         /// a basic constructor which takes only the nice tree decomposition as an argument
@@ -173,6 +175,34 @@ pub mod first_approach{
             }
         }
 
+        /// integer_functions::apply where the base is set to |V(to_graph)|
+        pub fn apply(&self, f : Mapping, s : Mapping) -> Mapping{
+            integer_functions::apply(self.to_graph.node_count() as Mapping, f, s)
+        }
+
+        /// integer_functions::extend where the base is set to |V(to_graph)|
+        pub fn extend(&self, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
+            integer_functions::extend(self.to_graph.node_count() as Mapping, f, s, v)
+        }
+
+        /// integer_functions::reduce where the base is set to |V(to_graph)|
+        pub fn reduce(&self, f : Mapping, s : Mapping) -> Mapping{
+            integer_functions::reduce(self.to_graph.node_count() as Mapping, f, s)
+        }
+
+        /// integer_functions::max_mappings where the base is set to |V(to_graph)|
+        /// and the number of digits is set to the size of the bag of node
+        pub fn max_bag_mappings(&self, node : TreeNode) -> Mapping{
+            integer_functions::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
+                                            self.to_graph.node_count() as Mapping )
+        }
+
+        /// returns the sorted bag of a given node as a Vector of Vertices
+        pub fn sorted_bag(&self, node : TreeNode) -> Vec<Vertex>{
+            let mut v: Vec<&Vertex> = Vec::from_iter(self.nice_tree_decomposition.bag(node).unwrap().iter());
+            v.sort();
+            v.iter().map(|e| **e).collect()
+        }
 
 
     }
