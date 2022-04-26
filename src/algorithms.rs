@@ -132,8 +132,8 @@ pub mod generation {
 pub mod first_approach{
     use std::collections::{HashMap, HashSet};
     use std::hash::Hash;
-    use itertools::Itertools;
-    use petgraph::matrix_graph::MatrixGraph;
+    use itertools::{all, Itertools};
+    use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
     use crate::algorithms::integer_functions;
     use crate::algorithms::integer_functions::Mapping;
@@ -221,22 +221,36 @@ pub mod first_approach{
         let mut table = DPData::new(ntd,to_graph);
 
         // todo: Clone is not nice -> Just borrow later
-        let possible_edges = generate_edges(ntd.clone());
-
+        let possible_edges = generate_possible_edges(ntd);
 
         // Mapping each edge onto its index
         let mut edge_to_index : HashMap<(usize,usize), usize> = HashMap::new();
-        for (pos, (u,v)) in possible_edges.iter().enumerate(){
+        let all_possible_edges = possible_edges.get(&ntd.root()).unwrap();
+        for (pos, (u,v)) in all_possible_edges.iter().enumerate(){
             // Inserting edges in both direction such that thex will always be found
             // possible edges contain edges only in one direction
             edge_to_index.insert((*u, *v), pos );
             edge_to_index.insert((*v, *u), pos );
         }
 
+        // Creat a list of possible edges by their indices
+        let mut possible_edge_indices = HashMap::new();
+        for (a,b) in possible_edges.iter(){
+
+            let mut index_list : Vec<usize> = vec![];
+            for i in b{
+                index_list.push(*edge_to_index.get(i).unwrap());
+            }
+            possible_edge_indices.insert(*a, index_list);
+
+        }
+
         // go through every node of the stingy ordering
         for p in stingy_ordering{
+            println!("{:?}",p);
             match ntd.node_type(p){
                 Some(NodeType::Leaf) => {
+                    println!("Leaf");
                     let unique_vertex = ntd.bag(p).unwrap().iter().next().unwrap();
 
                     // go through all mappings
@@ -244,7 +258,6 @@ pub mod first_approach{
 
                         // sets the entry for the node p the empty graph with
                         // 0 edges and the mapping (v, aim_vertex) to 1
-                        println!("entry set {:?}, {:?}, {:?} to {:?}", p, 0, aim_vertex as Mapping, 1);
                         table.set(p, 0, aim_vertex as Mapping, 1);
                     }
 
@@ -253,6 +266,7 @@ pub mod first_approach{
                     let index = *edge_to_index.get(&(unique_vertex.index(), unique_vertex.index())).unwrap();
                     // we inserting a 1 at the index (of the self loop edge) position of the binary number
                     let edges = 2_u32.pow(index as u32) as u64;
+                    println!("leaf edge set {:?}", edges);
 
                     for aim_vertex in 0..to_graph.node_count() {
                         // check aim_vertex also has a self_loop
@@ -261,31 +275,349 @@ pub mod first_approach{
                             // 0 edges and the mapping (v, aim_vertex) to 1
                             table.set(p, edges, aim_vertex as Mapping, 1);
                         }
+                        else
+                        {
+                            table.set(p, edges, aim_vertex as Mapping, 0);
+                        }
 
                     }
 
+                    println!("table state {:?}", table.table);
                 }
                 Some(NodeType::Introduce) => {
+                    println!("Intro");
+                    let q = *ntd.unique_child(p).unwrap();
+                    let v = ntd.introduced_vertex(p).unwrap();
+
+                    let pos_edges_of_p = possible_edge_indices.get(&p).unwrap();
+
+                    // MAIN LOOP
+                    for edges in pos_edges_of_p.iter().powerset().collect::<Vec<_>>(){
+
+                        // number representation of the edge set
+                        let edges_number = {
+                            let mut n = 0;
+                            for i in edges.clone(){
+                                n += 2_u32.pow(*i as u32)
+                            }
+                            n
+                        };
+
+                        //let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
+                        //let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
+                        let mut s_q : Vec<Vertex> = vec![];
+                        for edge in edges{
+                            let (a,b) = all_possible_edges[*edge];
+
+                            // self loops will be dealt separately
+                            if a == v.index() && b == v.index()
+                            {
+                                break;
+                            }
+
+                            if a == v.index(){
+                                s_q.push(Vertex::new(b));
+                            }
+
+                            if b == v.index() {
+                                s_q.push(Vertex::new(a));
+                            }
+                        }
+
+                        // ############################### Integer function stuff #################################
+                        // transforms the bag into a sorted vertex used for integer functions
+                        let sorted_p_bag = table.sorted_bag(p);
+                        let sorted_q_bag = table.sorted_bag(q);
+
+                        // significance
+                        let significance_list_p = {
+                            let mut hs = HashMap::new();
+                            for i in 0..sorted_p_bag.len(){
+                                hs.insert(sorted_p_bag[i], i);
+                            }
+                            hs.clone()
+                        };
+
+                        //returns the significance of a given vertex in the bag
+                        let significance_p = |a : &Vertex|{
+                            significance_list_p.get(a).unwrap()
+                        };
+
+
+                        // significance for q
+                        let significance_list_q = {
+                            let mut hs = HashMap::new();
+                            for i in 0..sorted_q_bag.len(){
+                                hs.insert(sorted_q_bag[i], i);
+                            }
+                            hs
+                        };
+
+                        //returns the significance of a given vertex in the bag
+                        let significance_q = |a : &Vertex|{
+                            significance_list_q.get(a).unwrap()
+                        };
+
+                        for f_q in 0..table.max_bag_mappings(q){
+                            for a in 0..to_graph.node_count() {
+
+                                let test_condition = {
+                                    //println!("testing condition");
+                                    let mut t = true;
+                                    for u in s_q.clone(){
+
+                                        let first_vertex = Vertex::new(a);
+                                        let second_vertex = Vertex::new(table.apply(f_q,*significance_q(&u) as Mapping ) as usize);
+                                        //println!("{:?} mapped to {:?}", u, second_vertex);
+
+                                        //println!("checking edge ({:?}, {:?})", first_vertex, second_vertex);
+
+                                        if !to_graph.has_edge( first_vertex, second_vertex){
+                                            //println!("graph G does not have that edge");
+                                            t = false;
+                                            break;
+                                        }
+
+
+                                    }
+
+                                    //additonal sucht that self loops will be mapped on self loops
+                                    let self_loop_index = edge_to_index.get(&(v.index(),v.index())).unwrap();
+
+                                    // Checks if bit of the self loop edge has been set.
+                                    let decider = edges_number / 2_u32.pow(*self_loop_index as u32 - 1) % 2;
+
+                                    if decider == 1 && !to_graph.has_edge(Vertex::new(a),Vertex::new(a))
+                                    {
+                                        t = false;
+                                    }
+
+
+                                    t
+                                };
+
+                                let f = table.extend(f_q, *significance_p(&v) as Mapping, a as Mapping).clone();
+
+
+                                if test_condition{
+                                    //possible edges of q
+                                    let pos_edges_of_q = possible_edge_indices.get(&q).unwrap();
+
+                                    // Representation of possible edges of q as a number
+                                    let pos_edges_of_q_number = {
+                                        let mut n = 0;
+                                        for i in pos_edges_of_q.clone(){
+                                            n += 2_u32.pow(i as u32)
+                                        }
+                                        n
+                                    };
+
+                                    // intersection of both edge sets by bitwise AND
+                                    let old_edge_set_number = edges_number & pos_edges_of_q_number;
+
+                                    //println!("{:?} AND {:?} = {:?}", edges_number, pos_edges_of_q_number ,old_edge_set_number);
+
+                                    println!("table get node : {:?}, edge_set : {:?}, mapping : {:?} ",q, old_edge_set_number as u64, f_q);
+
+                                    let value = table.get(q, old_edge_set_number as u64, f_q).unwrap().clone();
+
+                                    table.set(p,
+                                              edges_number as u64,
+                                              f,
+                                              value);
+                                }
+                                else {
+                                    table.set(p,
+                                              edges_number as u64,
+                                              f,
+                                              0);
+                                }
+
+                                //todo: continue
+                            }
+                        }
+
+                    }
+                    table.table.remove(&q);
 
                 }
                 Some(NodeType::Forget) => {
+                    println!(">Forget");
+                    let q = *ntd.unique_child(p).unwrap();
+                    let v = ntd.forgotten_vertex(p).unwrap();
 
+                    // transforms the bag into a sorted vertex used for integer functions
+                    let sorted_bag = table.sorted_bag(p);
+
+                    let pos_edges_of_p = possible_edge_indices.get(&p).unwrap();
+
+                    let old_significance = |a : &Vertex|{
+                        if let Some(i) = sorted_bag.iter().position(|i| a > i){
+                            i + 1 // added here a plus one since i think we has some index shift here
+                            // todo: check if that is correct!
+                            // todo: check if the extend function may have an index shift
+                        }
+                        else {
+                            sorted_bag.len()
+                        }
+                    };
+
+                    // MAIN LOOP
+                    for edges in pos_edges_of_p.iter().powerset().collect::<Vec<_>>() {
+
+                        // number representation of the edge set
+                        let edges_number = {
+                            let mut n = 0;
+                            for i in edges.clone() {
+                                n += 2_u32.pow(*i as u32)
+                            }
+                            n
+                        };
+
+                        //let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
+                        //let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
+                        let mut s_q: Vec<Vertex> = vec![];
+                        for edge in edges {
+                            let (a, b) = all_possible_edges[*edge];
+                            if a == v.index() {
+                                s_q.push(Vertex::new(b));
+                            }
+
+                            if b == v.index() {
+                                s_q.push(Vertex::new(a));
+                            }
+                        }
+
+                        for f in 0..table.max_bag_mappings(p) {
+                            let mut sum = 0;
+                            for a in 0..to_graph.node_count() {
+                                let f_old = table.extend(f,old_significance(&v) as Mapping, a as Mapping);
+
+                                let additional_mappings = table.get(q, edges_number as u64, f_old).unwrap();
+                                sum += additional_mappings;
+
+                            }
+                            table.set(p, edges_number as u64, f, sum);
+                        }
+
+                    }
+
+                    table.table.remove(&q);
                 }
                 Some(NodeType::Join) => {
+                    println!("join");
+                    if let Some(children) = ntd.children(p){
+                        let q1 = children.get(0).unwrap();
+                        let q2 = children.get(1).unwrap();
+
+                        let pos_edges_of_q1 = possible_edge_indices.get(&q1).unwrap();
+                        let pos_edges_of_q2 = possible_edge_indices.get(&q2).unwrap();
+                        // number representation of the edge set
+                        let pos_edges_q1_number = {
+                            let mut n = 0;
+                            for i in pos_edges_of_q1.clone(){
+                                n += 2_u32.pow(i as u32)
+                            }
+                            n
+                        };
+                        let pos_edges_q2_number = {
+                            let mut n = 0;
+                            for i in pos_edges_of_q2.clone(){
+                                n += 2_u32.pow(i as u32)
+                            }
+                            n
+                        };
+
+
+                        let pos_edges_of_p = possible_edge_indices.get(&p).unwrap();
+
+                        for edges in pos_edges_of_p.iter().powerset().collect::<Vec<_>>(){
+
+                            // number representation of the edge set
+                            let edges_number = {
+                                let mut n = 0;
+                                for i in edges.clone() {
+                                    n += 2_u32.pow(*i as u32)
+                                }
+                                n
+                            };
+
+                            // Updates every new mapping
+                            for f in 0..table.max_bag_mappings(p){
+
+                                let intersection_q1 = edges_number & pos_edges_q1_number;
+                                let intersection_q2 = edges_number & pos_edges_q2_number;
+
+                                table.set(p,
+                                          edges_number as u64,
+                                          f as Mapping,
+                                          table.get(*q1, intersection_q1 as u64, (f as Mapping)).unwrap() *
+                                              table.get(*q2, intersection_q2 as u64, (f as Mapping)).unwrap()
+                                );
+                            }
+
+
+                        }
+                        // Deletes entries after use...
+                        table.table.remove(q1);
+                        table.table.remove(q2);
+
+
+                    }
                 }
-                None => {}
+                None => {println!("test")}
             }
 
         }
+
+        let final_list = table.table.get(&ntd.root()).unwrap();
+
+        let integer_to_graph = |x : u64| {
+
+            let mut edges = vec![];
+
+            for i in 0..all_possible_edges.len() as u32{
+                let filter = 2_u32.pow(i) as u64;
+                if x & filter == 1{
+                    edges.push(all_possible_edges[i as usize]);
+                }
+            }
+
+            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
+            let number_of_vertices= {
+                let mut max = 0;
+                for (u,v) in &edges{
+                    if *u > max {max = *u}
+                    if *v > max {max = *v}
+                }
+                max
+            };
+
+            // add vertices
+            for i in 0..number_of_vertices {
+                graph.add_node(());
+            }
+            // add edges
+            for (u,v) in edges{
+                graph.add_edge(NodeIndex::new(u),NodeIndex::new(v), ());
+            }
+            graph
+
+        };
+        println!("lenght : {:?}",final_list.len());
+        println!("{:?}",final_list);
+
+        //todo: return entries and list of graphs
     }
 
-    pub fn possible_edges(ntd : &NiceTreeDecomposition) -> HashMap<TreeNode, Vec<(usize,usize)>>
+    pub fn generate_possible_edges(ntd : &NiceTreeDecomposition) -> HashMap<TreeNode, Vec<(usize, usize)>>
     {
         let stingy_ordering = ntd.stingy_ordering();
         let mut possible_edges: HashMap<TreeNode, Vec<(usize, usize)>> = HashMap::new();
 
         for p in stingy_ordering{
-            println!("{:?}", p);
+            //println!("{:?}", p);
             match ntd.node_type(p) {
                 Some(NodeType::Leaf) => {
                     //returns the only vertex in the bag of p
@@ -619,8 +951,6 @@ pub mod diaz {
                                         t = false;
                                         break;
                                     }
-
-
                                 }
 
                                 //additonal sucht that self loops will be mapped on self loops
@@ -652,7 +982,6 @@ pub mod diaz {
 
                         }
                     }
-
 
                     table.table.remove(&q);
 
@@ -989,19 +1318,19 @@ mod tests{
     #[test]
     fn test_generate_edges_mapping(){
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
-        let possible_edges = first_approach::possible_edges(&ntd);
+        let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
         assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)],
                                    all_possible_edges));
 
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
-        let possible_edges = first_approach::possible_edges(&ntd);
+        let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)],
                                    all_possible_edges));
 
         let ntd  = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
-        let possible_edges = first_approach::possible_edges(&ntd);
+        let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&4).unwrap().clone();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(0,1),(1,2),(0,2)],
                                    all_possible_edges));
