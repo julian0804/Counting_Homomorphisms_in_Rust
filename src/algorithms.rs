@@ -130,19 +130,24 @@ pub mod generation {
 }
 
 pub mod first_approach{
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
+    use std::hash::Hash;
+    use itertools::Itertools;
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
     use crate::algorithms::integer_functions;
     use crate::algorithms::integer_functions::Mapping;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, TreeNode, Vertex};
+    use crate::generate_edges;
+    use crate::graph_structures::graph_structures::nice_tree_decomposition::{NiceTreeDecomposition, NodeType, TreeNode, Vertex};
 
     /// a structure containing all necessary data for the Dynamic Program
     pub(crate) struct DPData<'a>{
         // table[p,e,phi], p = tree node, e = subset of edges represented by an integer, phi = mapping
         table : HashMap<TreeNode, HashMap<(u64, Mapping), u64>>,
+        pub possible_edges_until: HashMap<TreeNode, Vec<(usize, usize)>>,
         nice_tree_decomposition : &'a NiceTreeDecomposition,
         to_graph : &'a MatrixGraph<(),(), Undirected>,
+
     }
 
     /// implementation of methods on DPData
@@ -151,7 +156,10 @@ pub mod first_approach{
         /// a basic constructor which takes only the nice tree decomposition as an argument
         pub fn new<'b>(nice_tree_decomposition : &'b NiceTreeDecomposition,
                        to_graph : &'b MatrixGraph<(),(), Undirected>) -> DPData<'b>{
-            DPData{table : HashMap::new(), nice_tree_decomposition, to_graph}
+            DPData{table : HashMap::new(),
+                possible_edges_until: HashMap::new(),
+                nice_tree_decomposition,
+                to_graph}
         }
 
         /// given p = tree node, e = subset of edges represented by an integer, phi = mapping
@@ -205,6 +213,144 @@ pub mod first_approach{
         }
 
 
+    }
+
+    pub fn first_approach(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected> ){
+        let stingy_ordering = ntd.stingy_ordering();
+
+        let mut table = DPData::new(ntd,to_graph);
+
+        // todo: Clone is not nice -> Just borrow later
+        let possible_edges = generate_edges(ntd.clone());
+
+
+        // Mapping each edge onto its index
+        let mut edge_to_index : HashMap<(usize,usize), usize> = HashMap::new();
+        for (pos, (u,v)) in possible_edges.iter().enumerate(){
+            // Inserting edges in both direction such that thex will always be found
+            // possible edges contain edges only in one direction
+            edge_to_index.insert((*u, *v), pos );
+            edge_to_index.insert((*v, *u), pos );
+        }
+
+        // go through every node of the stingy ordering
+        for p in stingy_ordering{
+            match ntd.node_type(p){
+                Some(NodeType::Leaf) => {
+                    let unique_vertex = ntd.bag(p).unwrap().iter().next().unwrap();
+
+                    // go through all mappings
+                    for aim_vertex in 0..to_graph.node_count() {
+
+                        // sets the entry for the node p the empty graph with
+                        // 0 edges and the mapping (v, aim_vertex) to 1
+                        println!("entry set {:?}, {:?}, {:?} to {:?}", p, 0, aim_vertex as Mapping, 1);
+                        table.set(p, 0, aim_vertex as Mapping, 1);
+                    }
+
+                    //find index of the edge (v,v)
+                    // todo: make this more beautiful
+                    let index = *edge_to_index.get(&(unique_vertex.index(), unique_vertex.index())).unwrap();
+                    // we inserting a 1 at the index (of the self loop edge) position of the binary number
+                    let edges = 2_u32.pow(index as u32) as u64;
+
+                    for aim_vertex in 0..to_graph.node_count() {
+                        // check aim_vertex also has a self_loop
+                        if to_graph.has_edge(Vertex::new(aim_vertex),Vertex::new(aim_vertex)){
+                            // sets the entry for the node p the empty graph with
+                            // 0 edges and the mapping (v, aim_vertex) to 1
+                            table.set(p, edges, aim_vertex as Mapping, 1);
+                        }
+
+                    }
+
+                }
+                Some(NodeType::Introduce) => {
+
+                }
+                Some(NodeType::Forget) => {
+
+                }
+                Some(NodeType::Join) => {
+                }
+                None => {}
+            }
+
+        }
+    }
+
+    pub fn possible_edges(ntd : &NiceTreeDecomposition) -> HashMap<TreeNode, Vec<(usize,usize)>>
+    {
+        let stingy_ordering = ntd.stingy_ordering();
+        let mut possible_edges: HashMap<TreeNode, Vec<(usize, usize)>> = HashMap::new();
+
+        for p in stingy_ordering{
+            println!("{:?}", p);
+            match ntd.node_type(p) {
+                Some(NodeType::Leaf) => {
+                    //returns the only vertex in the bag of p
+                    let vertex = ntd.bag(p).unwrap().iter().next().unwrap();
+                    possible_edges.insert(p, vec![(vertex.index(), vertex.index())]);
+                }
+                Some(NodeType::Introduce) => {
+                    let q = ntd.unique_child(p).unwrap();
+                    let mut edges = possible_edges.get(q).unwrap().clone();
+
+                    let bag = ntd.bag(p).unwrap();
+
+                    for u in bag{
+                        for v in bag{
+                            // checks if edge has already been added
+                            // we are using tuples but since we are looking at undirected graphs if we have to check both ways
+                            // todo: Can we remove the .index() here and use the node_index directly?
+                            if !edges.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
+                                edges.push((u.index() , v.index()));
+                            }
+
+                        }
+                    }
+                    possible_edges.insert(p, edges);
+
+                }
+                Some(NodeType::Forget) => {
+                    let q = ntd.unique_child(p).unwrap();
+                    // just clone the set of possible edges
+                    possible_edges.insert(p, possible_edges.get(q).unwrap().clone());
+                }
+                Some(NodeType::Join) => {
+                    let children = ntd.children(p).unwrap();
+
+                    let q1 = children.get(0).unwrap();
+                    let q2 = children.get(1).unwrap();
+
+                    let first : &TreeNode;
+                    let second : &TreeNode;
+
+                    if possible_edges.get(q1).unwrap().len() >= possible_edges.get(q2).unwrap().len(){
+                        first = q1;
+                        second = q2;
+                    }
+                    else {
+                        first = q2;
+                        second = q1;
+                    }
+
+                    let mut edges = possible_edges.get(first).unwrap().clone();
+                    // merge the edges
+                    for (u,v) in possible_edges.get(second).unwrap(){
+                        if !edges.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
+                            edges.push((*u , *v));
+                        }
+                    }
+
+                    possible_edges.insert(p,edges);
+
+                }
+                None => ()
+            }
+        }
+
+        possible_edges
     }
 }
 
@@ -405,11 +551,10 @@ pub mod diaz {
                 },
                 Some(NodeType::Introduce) => {
                     //println!("Introduce");
-                    // So tree_structure do not have to be public
                     let q = *ntd.unique_child(p).unwrap();
                     let v = ntd.introduced_vertex(p).unwrap();
 
-                    // For calculating S_q
+                    //  calculating S_q
                     let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
                     let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
                     let mut s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(q).unwrap()).collect(); // possible error case, explanation below
@@ -473,9 +618,6 @@ pub mod diaz {
                                         //println!("graph G does not have that edge");
                                         t = false;
                                         break;
-                                    }
-                                    else {
-                                        //println!("graph G has that edge");
                                     }
 
 
@@ -815,7 +957,7 @@ mod tests{
     }
 
     // compares if two lists of edges have the same edges
-    // O(n^2)
+    // O(len(list1) * len(list2))
     fn compare_edge_lists(list1 : Vec<(usize, usize)>, list2 : Vec<(usize, usize)>) -> bool
     {
         //TODO: better notation with (de)reference operation
@@ -842,6 +984,32 @@ mod tests{
 
         let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)], generate_edges(ntd)));
+    }
+
+    #[test]
+    fn test_generate_edges_mapping(){
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let possible_edges = first_approach::possible_edges(&ntd);
+        let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
+        assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)],
+                                   all_possible_edges));
+
+        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
+        let possible_edges = first_approach::possible_edges(&ntd);
+        let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
+        assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)],
+                                   all_possible_edges));
+
+        let ntd  = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
+        let possible_edges = first_approach::possible_edges(&ntd);
+        let all_possible_edges = possible_edges.get(&4).unwrap().clone();
+        assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(0,1),(1,2),(0,2)],
+                                   all_possible_edges));
+
+        let all_possible_edges = possible_edges.get(&10).unwrap().clone();
+        assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(4,4),(0,1),(1,2),(0,2),(2,3),(3,4)],
+                                   all_possible_edges));
+
     }
 
     #[test]
