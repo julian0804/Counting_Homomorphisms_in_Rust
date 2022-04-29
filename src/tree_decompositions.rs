@@ -3,7 +3,7 @@
 /// A module containing data structures and algorithms for the tree structure
 /// of (nice) tree decompositions
 pub mod tree_structure{
-    use core::panicking::panic;
+    use std::cmp::max;
     use std::collections::{HashMap, HashSet};
     use petgraph::matrix_graph::NodeIndex;
 
@@ -72,8 +72,13 @@ pub mod tree_structure{
             // Checks if node q already has a parent. Resetting the parent could lead to
             // data inconsistency between children_list and parent list. For each node we
             // can set its parent only ones.
-            if self.parent(child) != None {
-                panic!("Node {:?} already has a parent", child);
+            if self.parent(q) != None {
+                panic!("Node {:?} already has a parent!", q);
+            }
+
+            // Controls that index is not out of bounds
+            if max(p,q) >= self.number_of_nodes{
+                panic!("Node index out of bounds!");
             }
 
             self.parents_list.insert(q,p);
@@ -115,9 +120,38 @@ pub mod nice_tree_decomposition{
         Forget,
         Join
     }
+
+
 }
 
 #[cfg(test)]
 pub mod tree_structure_tests{
+    use crate::tree_decompositions::tree_structure;
+
+    #[test]
+    pub fn test_tree_structure_methods(){
+
+        let mut tree_structure = tree_structure::TreeStructure::new(5);
+
+        // Before adding edges
+        assert_eq!(tree_structure.is_parent_of(4,0), false);
+        assert_eq!(tree_structure.node_count(), 5);
+        assert_eq!(tree_structure.parent(1), None);
+        assert_eq!(tree_structure.root(), 0);
+        assert_eq!(tree_structure.children_count(0), 0);
+
+        // Adding edges
+        tree_structure.add_child(4,0);
+        tree_structure.add_child(0,2);
+        tree_structure.add_child(0,1);
+        tree_structure.add_child(1,3);
+
+        // After adding edges
+        assert_eq!(tree_structure.is_parent_of(4,0), true);
+        assert_eq!(tree_structure.node_count(), 5);
+        assert_eq!(tree_structure.parent(1), Some(&0));
+        assert_eq!(tree_structure.root(), 4);
+        assert_eq!(tree_structure.children_count(0), 2);
+    }
 
 }
