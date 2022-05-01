@@ -101,13 +101,13 @@ pub mod tree_structure{
         }
     }
 
-
 }
 
 pub mod tree_decomposition{
 
 }
 
+/// A public module containing the nice tree decomposition structure and relating functions.
 pub mod nice_tree_decomposition{
     use std::collections::{HashMap, HashSet};
     use crate::tree_decompositions::tree_structure::{Vertex, TreeStructure, TreeNode};
@@ -210,6 +210,16 @@ pub mod nice_tree_decomposition{
         /// An Interface function for the children() method of the private field tree_structure.
         pub fn children(&self, p : TreeNode) -> Option<&Vec<TreeNode>> {
             self.tree_structure.children(p)
+        }
+
+        /// An Interface function for the is_parent_of() method of the private field tree_structure.
+        pub fn is_parent_of(&self, p : TreeNode, q : TreeNode) -> bool{
+            self.tree_structure.is_parent_of(p, q)
+        }
+
+        /// An Interface function for the children_count() method of the private field tree_structure.
+        pub fn children_count(&self, p : TreeNode) -> TreeNode{
+            self.tree_structure.children_count(p)
         }
 
         /// Returns the unique child node q of a given node p. Note that
@@ -365,41 +375,5 @@ pub mod nice_tree_decomposition{
         }
 
     }
-
-}
-
-#[cfg(test)]
-pub mod tree_structure_tests{
-    use crate::tree_decompositions::tree_structure;
-
-    #[test]
-    pub fn test_tree_structure_methods(){
-
-        let mut tree_structure = tree_structure::TreeStructure::new(5);
-
-        // Before adding edges
-        assert_eq!(tree_structure.is_parent_of(4,0), false);
-        assert_eq!(tree_structure.node_count(), 5);
-        assert_eq!(tree_structure.parent(1), None);
-        assert_eq!(tree_structure.root(), 0);
-        assert_eq!(tree_structure.children_count(0), 0);
-
-        // Adding edges
-        tree_structure.add_child(4,0);
-        tree_structure.add_child(0,2);
-        tree_structure.add_child(0,1);
-        tree_structure.add_child(1,3);
-
-        // After adding edges
-        assert_eq!(tree_structure.is_parent_of(4,0), true);
-        assert_eq!(tree_structure.node_count(), 5);
-        assert_eq!(tree_structure.parent(1), Some(&0));
-        assert_eq!(tree_structure.root(), 4);
-        assert_eq!(tree_structure.children_count(0), 2);
-    }
-}
-
-#[cfg(test)]
-pub mod nice_tree_decomposition_test{
 
 }

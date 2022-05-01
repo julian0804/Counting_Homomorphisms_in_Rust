@@ -1,3 +1,35 @@
+use std::collections::HashMap;
+use crate::tree_decompositions::nice_tree_decomposition::{Bag, NiceTreeDecomposition, NodeData, NodeType};
+use crate::tree_decompositions::tree_structure::{TreeStructure, Vertex};
+
+/// hard-wired example one
+fn ntd_test_example() -> NiceTreeDecomposition{
+
+    let mut tree_structure = TreeStructure::new(10);
+    tree_structure.add_child(1,0);
+    tree_structure.add_child(2,1);
+    tree_structure.add_child(6,2);
+    tree_structure.add_child(4,3);
+    tree_structure.add_child(5,4);
+    tree_structure.add_child(6,5);
+    tree_structure.add_child(7,6);
+    tree_structure.add_child(8,7);
+    tree_structure.add_child(9,8);
+
+    let mut nodes_data = HashMap::new();
+    nodes_data.insert(0, NodeData::new(NodeType::Leaf, Bag::from([Vertex::new(0)])));
+    nodes_data.insert(1, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(0), Vertex::new(1)])));
+    nodes_data.insert(2, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(1)])));
+    nodes_data.insert(3, NodeData::new(NodeType::Leaf, Bag::from([Vertex::new(1)])));
+    nodes_data.insert(4, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(1),Vertex::new(2)])));
+    nodes_data.insert(5, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(1)])));
+    nodes_data.insert(6, NodeData::new(NodeType::Join, Bag::from([Vertex::new(1)])));
+    nodes_data.insert(7, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(1), Vertex::new(3)])));
+    nodes_data.insert(8, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(3)])));
+    nodes_data.insert(9, NodeData::new(NodeType::Forget, Bag::from([])));
+
+    NiceTreeDecomposition::new(tree_structure, nodes_data, 4, 1)
+}
 
 #[cfg(test)]
 pub mod tree_structure_tests{
@@ -33,38 +65,11 @@ pub mod tree_structure_tests{
 #[cfg(test)]
 pub mod nice_tree_decomposition_test{
     use std::collections::{HashMap, HashSet};
-    use crate::file_handler::import_tree_decomposition::import_ntd;
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::tree_decompositions::nice_tree_decomposition::{Bag, NiceTreeDecomposition, NodeData, NodeType};
     use crate::tree_decompositions::tree_structure::{TreeStructure, Vertex};
+    use crate::unit_tests::ntd_test_example;
 
-    /// produces example one by scratch
-    fn ntd_test_example() -> NiceTreeDecomposition{
-
-        let mut tree_structure = TreeStructure::new(10);
-        tree_structure.add_child(1,0);
-        tree_structure.add_child(2,1);
-        tree_structure.add_child(6,2);
-        tree_structure.add_child(4,3);
-        tree_structure.add_child(5,4);
-        tree_structure.add_child(6,5);
-        tree_structure.add_child(7,6);
-        tree_structure.add_child(8,7);
-        tree_structure.add_child(9,8);
-
-        let mut nodes_data = HashMap::new();
-        nodes_data.insert(0, NodeData::new(NodeType::Leaf, Bag::from([Vertex::new(0)])));
-        nodes_data.insert(1, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(0), Vertex::new(1)])));
-        nodes_data.insert(2, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(1)])));
-        nodes_data.insert(3, NodeData::new(NodeType::Leaf, Bag::from([Vertex::new(1)])));
-        nodes_data.insert(4, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(1),Vertex::new(2)])));
-        nodes_data.insert(5, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(1)])));
-        nodes_data.insert(6, NodeData::new(NodeType::Join, Bag::from([Vertex::new(1)])));
-        nodes_data.insert(7, NodeData::new(NodeType::Introduce, Bag::from([Vertex::new(1), Vertex::new(3)])));
-        nodes_data.insert(8, NodeData::new(NodeType::Forget, Bag::from([Vertex::new(3)])));
-        nodes_data.insert(9, NodeData::new(NodeType::Forget, Bag::from([])));
-
-        NiceTreeDecomposition::new(tree_structure, nodes_data, 4, 1)
-    }
 
     #[test]
     fn test_stingy_ordering(){
@@ -124,7 +129,7 @@ pub mod nice_tree_decomposition_test{
         assert_eq!(ntd.node_type(8), Some(&NodeType::Forget));
         assert_eq!(ntd.node_type(6), Some(&NodeType::Join));
 
-        // test unqiue child
+        // test unique child
         assert_eq!(ntd.unique_child(7), Some(&6));
         assert_eq!(ntd.unique_child(2), Some(&1));
         assert_eq!(ntd.unique_child(0), None);
@@ -148,4 +153,43 @@ pub mod nice_tree_decomposition_test{
         assert_eq!(ntd.unique_vertex(3), Some(&Vertex::new(1)));
     }
 
+}
+
+#[cfg(test)]
+pub mod tree_decomposition_handler_test{
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::unit_tests::ntd_test_example;
+
+    #[test]
+    pub fn test_ntd_import() {
+        let ntd = ntd_test_example();
+        assert_eq!(import_ntd("data/nice_tree_decompositions/example.ntd").unwrap(), ntd);
+    }
+}
+
+#[cfg(test)]
+pub mod graph_handler_test{
+    use crate::file_handler::graph_handler::import_metis;
+    use crate::tree_decompositions::tree_structure::Vertex;
+
+    #[test]
+    pub fn test_import_metis()
+    {
+        let edges = vec![
+            (0, 4), (0, 2), (0, 1),
+            (1, 0), (1, 2), (1, 3),
+            (2, 4), (2, 3), (2, 1), (2, 0),
+            (3, 1), (3, 2), (3, 5), (3, 6),
+            (4, 0), (4, 2), (4, 5),
+            (5, 4), (5, 3), (5, 6),
+            (6, 5), (6, 3)];
+
+        let g = import_metis("data/metis_graphs/tiny_01.graph").unwrap();
+
+        assert_eq!(g.node_count(), 7);
+        assert_eq!(g.edge_count(), 11);
+        for (a,b) in edges{
+            assert!(g.has_edge(Vertex::new(a), Vertex::new(b)));
+        }
+    }
 }

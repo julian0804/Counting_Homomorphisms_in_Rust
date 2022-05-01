@@ -133,6 +133,7 @@ pub mod first_approach{
     use std::collections::{HashMap, HashSet};
     use std::hash::Hash;
     use itertools::{all, Itertools};
+    use petgraph::dot::Dot;
     use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
     use crate::algorithms::integer_functions;
@@ -215,7 +216,8 @@ pub mod first_approach{
 
     }
 
-    pub fn first_approach(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected> ){
+    pub fn first_approach(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected> ) -> Vec<(MatrixGraph<(),(), Undirected>, u64)>
+    {
         let stingy_ordering = ntd.stingy_ordering();
 
         let mut table = DPData::new(ntd,to_graph);
@@ -572,27 +574,32 @@ pub mod first_approach{
 
         let final_list = table.table.get(&ntd.root()).unwrap();
 
+        let number_of_vertices= {
+
+            let mut max = 0;
+
+            for (u,v) in all_possible_edges{
+                if *u > max {max = *u}
+                if *v > max {max = *v}
+            }
+
+            // cause we get the biggest vertex index n, and the iterator always iterates from 0..n-1
+            max + 1
+        };
+
         let integer_to_graph = |x : u64| {
 
             let mut edges = vec![];
 
             for i in 0..all_possible_edges.len() as u32{
                 let filter = 2_u32.pow(i) as u64;
-                if x & filter == 1{
+                if x & filter == filter{
                     edges.push(all_possible_edges[i as usize]);
                 }
             }
 
             let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
 
-            let number_of_vertices= {
-                let mut max = 0;
-                for (u,v) in &edges{
-                    if *u > max {max = *u}
-                    if *v > max {max = *v}
-                }
-                max
-            };
 
             // add vertices
             for i in 0..number_of_vertices {
@@ -605,10 +612,21 @@ pub mod first_approach{
             graph
 
         };
-        println!("lenght : {:?}",final_list.len());
+
+        //println!("lenght : {:?}",final_list.len());
         println!("{:?}",final_list);
 
-        //todo: return entries and list of graphs
+        let mut graph_hom_number_list = vec![];
+
+        for ((graph_number, i),hom_number) in final_list{
+            println!("graph number {:?}", graph_number);
+            println!("hom number {:?}", hom_number.clone());
+            println!("graph {:?}", Dot::new(&integer_to_graph(*graph_number)));
+            graph_hom_number_list.push((integer_to_graph(*graph_number), hom_number.clone()));
+        }
+
+        graph_hom_number_list
+
     }
 
     pub fn generate_possible_edges(ntd : &NiceTreeDecomposition) -> HashMap<TreeNode, Vec<(usize, usize)>>
@@ -1071,10 +1089,12 @@ mod tests{
      */
 
     use itertools::interleave;
-    use crate::algorithms::diaz::{DPData};
+    use crate::algorithms::diaz::{diaz, DPData};
     use crate::{diaz, file_handler, generate_edges, simple_brute_force};
     use crate::algorithms::{first_approach, integer_functions};
     use crate::algorithms::brute_force_homomorphism_counter;
+    use crate::algorithms::brute_force_homomorphism_counter::simple_brute_force;
+    use crate::algorithms::generation::generate_edges;
     use crate::file_handler::file_handler::{create_ntd_from_file, metis_to_graph};
 
     #[test]
@@ -1308,28 +1328,28 @@ mod tests{
 
     #[test]
     fn test_generate_edges(){
-        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = file_handler::tree_decomposition_handler::import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
         assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)], generate_edges(ntd)));
 
-        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
+        let ntd = file_handler::tree_decomposition_handler::import_ntd("data/nice_tree_decompositions/example.ntd").unwrap();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)], generate_edges(ntd)));
     }
 
     #[test]
     fn test_generate_edges_mapping(){
-        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = file_handler::tree_decomposition_handler::import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
         assert!(compare_edge_lists(vec![(4, 4), (4, 2), (2, 2), (2, 1), (1, 1), (0, 0), (1, 0), (3, 3), (3, 1)],
                                    all_possible_edges));
 
-        let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/example.ntd").unwrap();
+        let ntd = file_handler::tree_decomposition_handler::import_ntd("data/nice_tree_decompositions/example.ntd").unwrap();
         let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(3,3),(0,1),(1,2),(1,3)],
                                    all_possible_edges));
 
-        let ntd  = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
+        let ntd  = file_handler::tree_decomposition_handler::import_ntd("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
         let possible_edges = first_approach::generate_possible_edges(&ntd);
         let all_possible_edges = possible_edges.get(&4).unwrap().clone();
         assert!(compare_edge_lists(vec![(0,0),(1,1),(2,2),(0,1),(1,2),(0,2)],
