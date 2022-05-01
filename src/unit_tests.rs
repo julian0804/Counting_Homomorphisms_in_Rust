@@ -63,7 +63,7 @@ pub mod tree_structure_tests{
 }
 
 #[cfg(test)]
-pub mod nice_tree_decomposition_test{
+pub mod nice_tree_decomposition_tests{
     use std::collections::{HashMap, HashSet};
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::tree_decompositions::nice_tree_decomposition::{Bag, NiceTreeDecomposition, NodeData, NodeType};
@@ -156,7 +156,7 @@ pub mod nice_tree_decomposition_test{
 }
 
 #[cfg(test)]
-pub mod tree_decomposition_handler_test{
+pub mod tree_decomposition_handler_tests{
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::unit_tests::ntd_test_example;
 
@@ -168,7 +168,7 @@ pub mod tree_decomposition_handler_test{
 }
 
 #[cfg(test)]
-pub mod graph_handler_test{
+pub mod graph_handler_tests{
     use crate::file_handler::graph_handler::import_metis;
     use crate::tree_decompositions::tree_structure::Vertex;
 
@@ -192,4 +192,44 @@ pub mod graph_handler_test{
             assert!(g.has_edge(Vertex::new(a), Vertex::new(b)));
         }
     }
+}
+
+#[cfg(test)]
+pub mod brute_force_tests{
+    use crate::brute_force::brute_force_homomorphism_counter::simple_brute_force;
+    use crate::file_handler::graph_handler::import_metis;
+
+    #[test]
+    fn test_brute_force() {
+        let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,1280);
+
+        let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,256);
+
+        let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_7.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let i = simple_brute_force(&from_graph, &to_graph);
+        assert_eq!(i,960);
+    }
+
 }

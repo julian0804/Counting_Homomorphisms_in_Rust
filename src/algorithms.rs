@@ -1,69 +1,6 @@
 //! Algorithms for counting graph homomorphisms
 //!
 
-
-/// A module containing operations for working with integer functions as
-/// presented in the paper "Counting subgraph patterns in large graphs" by
-/// Emil Ruhwald Nielsen, Otto Stadel Clausen and Elisabeth Terp Reeve.
-pub mod integer_functions {
-    use std::collections::HashMap;
-
-    /// Defining the type Mapping to distinguish the operation from normal u64 variables.
-    pub type Mapping = u64;
-
-    /// Given the integer function f of basis n. Apply returns the digit with significance s.
-    /// This is achieved by by shifting all digits s positions to the right and then take the rest
-    /// of the division by n which removes the least significant digit.
-    pub fn apply(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
-        ( f / (n.pow(s as u32) as u64) ) % n
-    }
-
-    /// Given the integer function f of basis n. Extend increases the number of digits by one.
-    /// This will be done by shifting all digits with significance higher than s one position
-    /// to the left(increase their significance by one). Then the digit with significance s will
-    /// be set to v
-    pub fn extend(n : Mapping, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
-        let r = f % (n.pow(s as u32) as Mapping);
-        let l = f - r;
-        (n * l) + (n.pow(s as u32) as Mapping) * v + r
-    }
-
-    /// Given the integer function f of basis n. Reduce decreases the number of digits by one.
-    /// This will be done by deleting the digit with significance s and then shifting all digits
-    /// with higher significance one to the right (decrease their significance by one).
-    pub fn reduce(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
-        let r = f % n.pow(s as u32);
-        let l = f - (f % n.pow((s + 1) as u32));
-        (l / n) + r
-    }
-
-    /// Returns the maximal amount of mappings from a set of d elements to
-    /// a set of n elements. This mappings can be represented by the integers
-    /// {0,1,...,max_mapping - 1}
-    pub fn max_mappings(d : Mapping, n : Mapping) -> Mapping{
-       n.pow(d as u32)
-    }
-
-    /// Takes an mapping f to the base n as input and returns the mapping as a hashmap
-    pub fn to_hashmap(n : Mapping, f : Mapping) -> HashMap<Mapping,Mapping>{
-        let mut mapping = HashMap::new();
-
-        let mut rest = f;
-        let mut pos = 0;
-
-        // this follows the simple iterative method of getting the representation of the number f
-        // to the basis of n
-        // see also: https://www.ics.uci.edu/~irani/w17-6D/BoardNotes/12_NumberRepresentationPost.pdf
-        while rest > 0 {
-            mapping.insert(pos, rest % n);
-            pos += 1;
-            rest = rest / n;
-        }
-
-        mapping
-    }
-}
-
 /// A module containing all functions for explicit edge and graph generation.
 pub mod generation {
     use itertools::Itertools;
@@ -704,55 +641,7 @@ pub mod first_approach{
     }
 }
 
-/// A module containing brute force homomorphism counter
-pub mod brute_force_homomorphism_counter{
 
-    use petgraph::matrix_graph::MatrixGraph;
-    use petgraph::Undirected;
-    use crate::algorithms::integer_functions;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::Vertex;
-
-    /// a simple brute force algorithm which iterates over all possible mappings from "from_graph" to "to_graph"
-    /// todo: a possible improvement would be to first seperate the graph into its connected components and then execute this algo for each of them
-    /// todo: generalize them for more graph types
-    pub fn simple_brute_force(from_graph : &MatrixGraph<(),(), Undirected>, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
-
-        let h = from_graph.node_count();
-        let g = to_graph.node_count();
-
-        // Checks if mapping is a homomorphism
-        let check_mapping = |f : usize|{
-
-            let mut ret = true;
-
-            for u in 0..h{
-                for v in 0..h{
-                    if from_graph.has_edge(Vertex::new(u ), Vertex::new(v )){
-
-                        // this is basically the apply functions of the integer functions
-                        let map_u = f / (g.pow(u as u32) as u64) as usize % g ;
-                        let map_v = f / (g.pow(v as u32) as u64) as usize % g ;
-
-                        if !to_graph.has_edge(Vertex::new(map_u), Vertex::new(map_v))
-                        {
-                            ret = false;
-                        }
-                    }
-                }
-            }
-            ret
-        };
-
-        let max = g.pow(h as u32);
-        let mut counter = 0;
-
-        // for all mapings from H to G
-        for f in 0..max{
-            if check_mapping(f){counter += 1;}
-        }
-        counter
-    }
-}
 
 pub mod diaz {
     use std::borrow::Borrow;

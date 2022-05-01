@@ -90,7 +90,7 @@ pub mod tree_decomposition_handler {
                             bag
                         };
 
-                        // construct node data from the information givven
+                        // construct node data from the information given
                         let node_data = match node_type {
                             Some("l") => NodeData::new(NodeType::Leaf, constructed_bag()),
                             Some("i") => NodeData::new(NodeType::Introduce, constructed_bag()),
@@ -133,7 +133,7 @@ pub mod graph_handler {
 
     /// Given a graph file f, import this graph as a Petgraph Matrix_Graph.
     /// Node-Indies will be subtracted by one (1,..,N) -> (0,..,N-1)
-    /// More informations on Metis could be found under https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
+    /// More information on Metis could be found under https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
     pub fn import_metis<P>(filename : P) -> Option<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>
         where P: AsRef<Path>
     {
