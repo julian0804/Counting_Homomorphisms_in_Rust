@@ -1,3 +1,4 @@
+
 pub mod graph_structures {
     use petgraph::*;
 
@@ -51,12 +52,9 @@ pub mod graph_structures {
              */
             pub fn bag(&self) -> &Bag { &self.bag }
         }
-
-        /*
-        This structure contains the data of a nice tree decomposition
-
-        Nodes: 0,1,...,N-1
-         */
+        
+        /// a simple tree structure to organize the data of tree decompositions
+        /// Nodes will be numbered by 0,1,...,N-1 where N is the total amount of nodes
         #[derive(PartialEq, Eq, Debug, Clone)]
         pub struct TreeStructure {
             number_of_nodes: TreeNode,
