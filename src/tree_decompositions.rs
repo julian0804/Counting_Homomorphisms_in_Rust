@@ -155,19 +155,27 @@ pub mod nice_tree_decomposition{
         tree_structure : TreeStructure,
         nodes_data: HashMap<TreeNode, NodeData>,
         stingy_ordering: Vec<TreeNode>,
-        unique_vertices: HashMap<TreeNode, Vertex>
+        unique_vertices: HashMap<TreeNode, Vertex>,
+        number_of_vertices: u32, // Number of all vertices contained in bags
+        width : u32 // This follows the definition of tree width: max_bag_size - 1
     }
 
     /// Implementation of methods for nice tree decompositions
     impl NiceTreeDecomposition{
 
         /// A simple constructor for the NiceTreeDecomposition
-        pub fn new(tree_structure : TreeStructure, nodes_data : HashMap<TreeNode, NodeData>) -> NiceTreeDecomposition{
+        pub fn new(tree_structure : TreeStructure, nodes_data : HashMap<TreeNode, NodeData>, number_of_vertices : u32, width : u32) -> NiceTreeDecomposition{
             // Computes stingy ordering of Nice Tree Decomposition in advance
             let stingy_ordering = NiceTreeDecomposition::compute_stingy_ordering(&tree_structure, &nodes_data);
             let unique_vertices = NiceTreeDecomposition::compute_unique_vertices(&tree_structure, &nodes_data, &stingy_ordering);
 
-            NiceTreeDecomposition{ tree_structure , nodes_data, stingy_ordering, unique_vertices}
+            NiceTreeDecomposition{
+                tree_structure,
+                nodes_data,
+                stingy_ordering,
+                unique_vertices,
+                number_of_vertices,
+                width}
         }
 
         /// ## Functions for getting node data
@@ -194,6 +202,11 @@ pub mod nice_tree_decomposition{
             self.tree_structure.parent(p)
         }
 
+        /// An Interface function for the node_count() method of the private field tree_structure.
+        pub fn node_count(&self) -> TreeNode {
+            self.tree_structure.node_count()
+        }
+
         /// An Interface function for the children() method of the private field tree_structure.
         pub fn children(&self, p : TreeNode) -> Option<&Vec<TreeNode>> {
             self.tree_structure.children(p)
@@ -211,6 +224,10 @@ pub mod nice_tree_decomposition{
         }
 
         /// ## Functions for node bag properties
+
+        /// Returns the number N of vertices contained in the bags of the nice tree decomposition.
+        /// Note that the vertices will represented as 0,.., N-1 (0 inclusive)
+        pub fn vertex_count(&self) -> u32{ self.number_of_vertices }
 
         /// This private function computes the Hashmap of  unique vertices by following the stingy ordering and compute this entry for each
         /// Introduce, Forget and Leaf nodes. Join nodes do not have unique vertices.
