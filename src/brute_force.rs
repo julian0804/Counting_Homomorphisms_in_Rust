@@ -3,6 +3,8 @@ pub mod brute_force_homomorphism_counter{
 
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
+    use crate::integer_functions::integer_functions;
+    use crate::integer_functions::integer_functions::{apply, Mapping, max_mappings};
     use crate::tree_decompositions::tree_structure::Vertex;
 
     /// a simple brute force algorithm which iterates over all possible mappings from "from_graph" to "to_graph"
@@ -14,7 +16,7 @@ pub mod brute_force_homomorphism_counter{
         let g = to_graph.node_count();
 
         // Checks if mapping is a homomorphism
-        let check_mapping = |f : usize|{
+        let check_mapping = |f : Mapping|{
 
             let mut ret = true;
 
@@ -22,11 +24,10 @@ pub mod brute_force_homomorphism_counter{
                 for v in 0..h{
                     if from_graph.has_edge(Vertex::new(u ), Vertex::new(v )){
 
-                        // this is basically the apply functions of the integer functions
-                        let map_u = f / (g.pow(u as u32) as u64) as usize % g ;
-                        let map_v = f / (g.pow(v as u32) as u64) as usize % g ;
+                        let map_u = integer_functions::apply(g as Mapping,f ,u as Mapping);
+                        let map_v = integer_functions::apply(g as Mapping,f ,v as Mapping);
 
-                        if !to_graph.has_edge(Vertex::new(map_u), Vertex::new(map_v))
+                        if !to_graph.has_edge(Vertex::new(map_u as usize), Vertex::new(map_v as usize))
                         {
                             ret = false;
                         }
@@ -37,7 +38,7 @@ pub mod brute_force_homomorphism_counter{
             ret
         };
 
-        let max = g.pow(h as u32);
+        let max = max_mappings(h as Mapping, g as Mapping);
         let mut counter = 0;
 
         // for all mapings from H to G
