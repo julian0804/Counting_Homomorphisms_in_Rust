@@ -124,12 +124,11 @@ pub mod diaz_algorithm {
                     // get the unique child of p
                     let q = *ntd.unique_child(p).unwrap();
                     // get the introduced vertex
-                    let introduced_vertex = *ntd.unique_vertex(p).unwrap();
+                    let v = *ntd.unique_vertex(p).unwrap();
 
-                    //  calculating S_q todo: make it more readable later
-                    let neighbours : Vec<Vertex> = from_graph.neighbors(introduced_vertex).collect();
-                    let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
-                    let mut s_q : Vec<&Vertex> = neighbour_set.intersection(ntd.bag(p).unwrap()).collect();
+
+                    let mut neighbours_of_v: HashSet<Vertex> = HashSet::from_iter(from_graph.neighbors(v));
+                    let mut s_q : Vec<&Vertex> = neighbours_of_v.intersection(ntd.bag(p).unwrap()).collect();
 
 
                     // sorted bag of q
@@ -140,9 +139,15 @@ pub mod diaz_algorithm {
                     let mut new_index = sorted_q_bag.len();
 
                     // Find the position of the introduce vertex in the new mapping
-                    if let Some(index) = sorted_q_bag.iter().position(|&vertex| introduced_vertex.index() < vertex.index() ){ new_index = index; }
+                    if let Some(index) = sorted_q_bag.iter().position(|&vertex| v.index() < vertex.index() ){ new_index = index; }
 
 
+                    let sorted_p_bag = dp_data.sorted_bag(p).unwrap();
+                    // maps vertex to its significance in the bag of p
+                    let mut significance_hash = HashMap::new();
+                    for i in 0..sorted_p_bag.len() {
+                        significance_hash.insert(sorted_p_bag[i], i);
+                    }
 
                     // iterate over all new mappings by inserting (introduced_vertex,a)
                     for f_q in 0..dp_data.max_bag_mappings(q){
@@ -156,9 +161,9 @@ pub mod diaz_algorithm {
 
                                 for u in &s_q{
                                     let image_of_unique_vertex = to_graph.from_index(a);
+
                                     // get the significance of vertex u in mapping f_prime
-                                    // todo: create a hashmap
-                                    let significance = dp_data.sorted_bag(p).unwrap().iter().position(|x| *x == **u).unwrap();
+                                    let significance = *significance_hash.get(u).unwrap();
 
                                     let image_of_u = to_graph.from_index(dp_data.table_apply(f_prime, significance as Mapping) as usize);
 
@@ -220,7 +225,7 @@ pub mod diaz_algorithm {
                                             dp_data.get(q2, &(f as Mapping)).unwrap());
                         }
 
-                        // Deletes entries after use...
+                        // Deletes entries og q1 and q2
                         dp_data.remove(*q1);
                         dp_data.remove(*q2);
                     }
