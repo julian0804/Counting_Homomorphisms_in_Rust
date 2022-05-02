@@ -82,7 +82,7 @@ pub mod tree_decomposition_handler {
                             let mut bag = Bag::new();
                             loop {
                                 if let Some(v) = args.next() {
-                                    bag.insert(Vertex::new(((v.parse::<u64>().unwrap() - 1) as usize)) );
+                                    bag.insert(Vertex::new((v.parse::<u64>().unwrap() - 1) as usize) );
                                 } else {
                                     break;
                                 }

@@ -233,3 +233,104 @@ pub mod brute_force_tests{
     }
 
 }
+
+#[cfg(test)]
+pub mod diaz_tests{
+    use crate::diaz;
+    use crate::file_handler::graph_handler::import_metis;
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::tree_decompositions::tree_structure::Vertex;
+
+    #[test]
+    fn test_dpddata() {
+
+        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+
+        let mut dp_data = diaz::diaz_algorithm::DPData::new(&from_graph, &to_graph, &ntd);
+
+        // test empty table
+        assert_eq!(dp_data.get(&4, &10) , None);
+        assert_eq!(dp_data.get(&9, &3) , None);
+
+        // try to set the values
+        dp_data.set(4, 10, 5);
+        dp_data.set(9,3,2);
+
+        // check values again
+        assert_eq!(dp_data.get(&4, &10) , Some(&5));
+        assert_eq!(dp_data.get(&9, &3) , Some(&2));
+
+        // Check table_apply
+        assert_eq!(dp_data.table_apply(30,1), 3);
+        assert_eq!(dp_data.table_apply(28,0), 0);
+
+        // Check table_extend
+        assert_eq!(dp_data.table_extend(15, 1, 2), 59);
+        assert_eq!(dp_data.table_extend(0,2,3), 48);
+
+        // Check table_reduce
+        assert_eq!(dp_data.table_reduce(59,0), 14);
+        assert_eq!(dp_data.table_reduce(15,1), 3);
+
+        // Check max_bag_mappings
+        assert_eq!(dp_data.max_bag_mappings(16), 64);
+        assert_eq!(dp_data.max_bag_mappings(0), 4);
+        assert_eq!(dp_data.max_bag_mappings(5), 16);
+
+        // check sorted bags
+        assert_eq!(*dp_data.sorted_bag(8).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(16).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(7).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(11).unwrap(), vec![Vertex::new(0),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(2).unwrap(), vec![Vertex::new(2)]);
+
+        assert_eq!(*dp_data.sorted_bag(8).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(16).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(7).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(11).unwrap(), vec![Vertex::new(0),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(2).unwrap(), vec![Vertex::new(2)]);
+    }
+
+    #[test]
+    fn test_diaz(){
+
+        let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,1280);
+
+        let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,256);
+
+        let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,0);
+
+        let from_graph = import_metis("data/metis_graphs/from_7.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
+        let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
+        assert_eq!(i,960);
+
+    }
+}
