@@ -334,3 +334,64 @@ pub mod diaz_tests{
 
     }
 }
+
+#[cfg(test)]
+pub mod graph_generation_test{
+    use petgraph::visit::GetAdjacencyMatrix;
+    use crate::file_handler::graph_handler::import_metis;
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
+
+
+    // todo: implement graph generation
+    // todo: find way to compare graphs
+    // todo implement test where a set of graphs will be generated and the hom number will be compared between brute force and diaz
+
+
+    // naive comparison of two edge lists.
+    // O(len(list1) * len(list2))
+    fn compare_edge_lists(list1 : &Vec<(usize, usize)>, list2 : &Vec<(usize, usize)>) -> bool
+    {
+        for (u,v) in list1{
+            if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
+                return false;
+            }
+        }
+        for (u,v) in list2{
+            if !&list1.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
+                return false;
+            }
+        }
+        true
+    }
+
+    #[test]
+    fn test_generate_possible_edges()
+    {
+
+        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let possible_edge_hash = generate_possible_edges(&ntd);
+
+        assert!(compare_edge_lists(possible_edge_hash.get(&1).unwrap() , &vec![(4,2), (2,2), (4,4)] ));
+        assert!(compare_edge_lists(possible_edge_hash.get(&5).unwrap() , &vec![(4,2), (2,2), (4,4), (1,2), (1,1)] ));
+        assert!(compare_edge_lists(possible_edge_hash.get(&7).unwrap() , &vec![(0,0)] ));
+        assert!(compare_edge_lists(possible_edge_hash.get(&8).unwrap() , &vec![(0,0),(1,1),(0,1)] ));
+        assert!(compare_edge_lists(possible_edge_hash.get(&10).unwrap() , &vec![(0,0),(1,1),(0,1), (4,2), (2,2), (4,4), (1,2)] ));
+        assert!(compare_edge_lists(possible_edge_hash.get(&13).unwrap() , &vec![(0,0),(1,1),(0,1), (4,2), (2,2), (4,4), (1,2), (1,3), (3,3)] ));
+
+    }
+
+    #[test]
+    fn test_generate_graphs()
+    {
+        let graphs = generate_graphs(4, vec![(1,2),(1,4),(1,3),(3,4)]);
+
+        let gen_1 = import_metis("data/metis_graphs/graph_generation_test/gen_1.graph").unwrap();
+
+        assert!(graphs.iter().any(|x| {*x.adjacency_matrix() == gen_1.adjacency_matrix() } ) );
+
+    }
+
+
+
+}
