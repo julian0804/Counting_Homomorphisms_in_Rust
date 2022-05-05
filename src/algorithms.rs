@@ -8,32 +8,6 @@ pub mod generation {
     use petgraph::Undirected;
     use crate::graph_structures::graph_structures::nice_tree_decomposition::NiceTreeDecomposition;
 
-    /// Given a nice tree decomposition ntd, this function generates all possible edges
-    pub fn generate_edges(ntd : NiceTreeDecomposition) -> Vec<(usize, usize)>{
-
-        // Traversing all nodes of a 
-        let stingy_ordering = ntd.stingy_ordering();
-        let mut edge_list: Vec<(usize,usize)> = vec![];
-
-
-        for p in stingy_ordering {
-            // cartesian product of all vertices in the bag of p
-            for u in ntd.bag(p).unwrap(){
-                for v in ntd.bag(p).unwrap(){
-
-                    // checks if edge has already been added
-                    // we are using tuples but since we are looking at undirected graphs if we have to check both ways
-                    // todo: Can we remove the .index() here and use the node_index directly?
-                    if !edge_list.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
-                        edge_list.push((u.index() , v.index()));
-                    }
-
-                }
-            }
-        }
-        edge_list
-    }
-
 
     /// Given a number of vertices and a set of possible edges this function computes all graphs
     /// with a subset of the possible edges and the same number of vertices.
@@ -566,79 +540,7 @@ pub mod first_approach{
 
     }
 
-    pub fn generate_possible_edges(ntd : &NiceTreeDecomposition) -> HashMap<TreeNode, Vec<(usize, usize)>>
-    {
-        let stingy_ordering = ntd.stingy_ordering();
-        let mut possible_edges: HashMap<TreeNode, Vec<(usize, usize)>> = HashMap::new();
 
-        for p in stingy_ordering{
-            //println!("{:?}", p);
-            match ntd.node_type(p) {
-                Some(NodeType::Leaf) => {
-                    //returns the only vertex in the bag of p
-                    let vertex = ntd.bag(p).unwrap().iter().next().unwrap();
-                    possible_edges.insert(p, vec![(vertex.index(), vertex.index())]);
-                }
-                Some(NodeType::Introduce) => {
-                    let q = ntd.unique_child(p).unwrap();
-                    let mut edges = possible_edges.get(q).unwrap().clone();
-
-                    let bag = ntd.bag(p).unwrap();
-
-                    for u in bag{
-                        for v in bag{
-                            // checks if edge has already been added
-                            // we are using tuples but since we are looking at undirected graphs if we have to check both ways
-                            // todo: Can we remove the .index() here and use the node_index directly?
-                            if !edges.iter().any(|&i| i == (u.index() , v.index()) || i == (v.index() , u.index())){
-                                edges.push((u.index() , v.index()));
-                            }
-
-                        }
-                    }
-                    possible_edges.insert(p, edges);
-
-                }
-                Some(NodeType::Forget) => {
-                    let q = ntd.unique_child(p).unwrap();
-                    // just clone the set of possible edges
-                    possible_edges.insert(p, possible_edges.get(q).unwrap().clone());
-                }
-                Some(NodeType::Join) => {
-                    let children = ntd.children(p).unwrap();
-
-                    let q1 = children.get(0).unwrap();
-                    let q2 = children.get(1).unwrap();
-
-                    let first : &TreeNode;
-                    let second : &TreeNode;
-
-                    if possible_edges.get(q1).unwrap().len() >= possible_edges.get(q2).unwrap().len(){
-                        first = q1;
-                        second = q2;
-                    }
-                    else {
-                        first = q2;
-                        second = q1;
-                    }
-
-                    let mut edges = possible_edges.get(first).unwrap().clone();
-                    // merge the edges
-                    for (u,v) in possible_edges.get(second).unwrap(){
-                        if !edges.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
-                            edges.push((*u , *v));
-                        }
-                    }
-
-                    possible_edges.insert(p,edges);
-
-                }
-                None => ()
-            }
-        }
-
-        possible_edges
-    }
 }
 
 #[cfg(test)]
@@ -716,27 +618,6 @@ mod tests{
         assert_eq!(test_dp_data.extend(f_4,0,2), 17 );
 
 
-
-    }
-
-    // compares if two lists of edges have the same edges
-    // O(len(list1) * len(list2))
-    fn compare_edge_lists(list1 : Vec<(usize, usize)>, list2 : Vec<(usize, usize)>) -> bool
-    {
-        //TODO: better notation with (de)reference operation
-        for (u,v) in &list1{
-            if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
-                return false;
-            }
-        }
-
-        for (u,v) in &list2{
-            if !&list1.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
-                return false;
-            }
-        }
-
-        true
     }
 
 
