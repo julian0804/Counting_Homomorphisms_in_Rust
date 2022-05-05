@@ -89,7 +89,7 @@ pub mod diaz_algorithm {
         }
     }
 
-
+    /// Implementation of the algorithm of diaz et all
     pub fn diaz(from_graph : &MatrixGraph<(),(), Undirected>, ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
 
         let stingy_ordering = ntd.stingy_ordering();
