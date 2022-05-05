@@ -1,9 +1,12 @@
 /// A module containing all functions necessary for generating graphs.
 pub mod graph_generation{
     use std::collections::HashMap;
+    use itertools::Itertools;
+    use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
+    use petgraph::Undirected;
+    use petgraph::visit::NodeIndexable;
     use crate::tree_decompositions::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
     use crate::tree_decompositions::tree_structure::TreeNode;
-
 
     /// Returns true if the *undirected* edge is contained in the list.
     pub fn edge_in_list((u,v) : (usize, usize), list : &Vec<(usize, usize)>) -> bool{
@@ -82,4 +85,55 @@ pub mod graph_generation{
         possible_edges
     }
 
+    /// Given a number of vertices and a set of possible edges this function computes all graphs
+    /// with a subset of the possible edges and the same number of vertices.
+    pub fn generate_graphs(number_of_vertices: u64, possible_edges : Vec<(usize, usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
+
+        // list of graphsas
+        let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
+
+        // iterate over the powerset of possible edges
+        for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
+            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
+            // add vertices
+            for i in 0..number_of_vertices {
+                graph.add_node(());
+            }
+
+            // add edges
+            for (u,v) in edges{
+                graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
+            }
+            graphs.push(graph);
+        }
+        graphs
+    }
+
+
+    /// This function checks if two given graphs are identical. (not isomorphic)
+    /// This is just a naive implementation for testing
+    pub fn equal_graphs(a : &petgraph::matrix_graph::MatrixGraph<(),(), Undirected>,
+                        b : &petgraph::matrix_graph::MatrixGraph<(),(), Undirected>)  -> bool{
+
+        // Checks if nodes are equal
+        if a.node_count() != b.node_count() {return false;}
+        let nodes = a.node_count();
+
+        // Checks if edges are equal
+        for u in 0..nodes {
+            for v in 0..nodes {
+                if a.has_edge(a.from_index(u), a.from_index(v)) && !b.has_edge(b.from_index(u), b.from_index(v))
+                {
+                    return false;
+                }
+
+                if !a.has_edge(a.from_index(u), a.from_index(v)) && b.has_edge(b.from_index(u), b.from_index(v))
+                {
+                    return false;
+                }
+            }
+        }
+        true
+    }
 }
