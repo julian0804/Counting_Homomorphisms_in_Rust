@@ -113,6 +113,7 @@ pub mod graph_generation{
 
     /// This function checks if two given graphs are identical. (not isomorphic)
     /// This is just a naive implementation for testing
+    /// todo: If not needed later, move it to the test module
     pub fn equal_graphs(a : &petgraph::matrix_graph::MatrixGraph<(),(), Undirected>,
                         b : &petgraph::matrix_graph::MatrixGraph<(),(), Undirected>)  -> bool{
 

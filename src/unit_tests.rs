@@ -413,3 +413,30 @@ pub mod graph_generation_test{
 
 
 }
+
+#[cfg(test)]
+pub mod algorithm_comparison_test{
+    use crate::brute_force::brute_force_homomorphism_counter::simple_brute_force;
+    use crate::diaz::diaz_algorithm::diaz;
+    use crate::file_handler::graph_handler::import_metis;
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
+
+    #[test]
+    fn compare_brute_force_with_diaz()
+    {
+        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let possible_edges = generate_possible_edges(&ntd);
+
+        let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
+
+        let graphs = generate_graphs(ntd.vertex_count() as u64, all_possible_edges);
+
+        let second_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+
+        for g in &graphs{
+            assert_eq!(diaz(g,&ntd, &second_graph), simple_brute_force(g, &second_graph));
+        }
+    }
+
+}
