@@ -1,5 +1,6 @@
 extern crate core;
 
+use petgraph::dot::Dot;
 /*
 
 mod lib;
@@ -20,6 +21,7 @@ use crate::algorithms::generation::{generate_edges, generate_graphs};
 */
 
 fn main(){
+
 /*
 
    let ntd = file_handler::file_handler::create_ntd_from_file("data/nice_tree_decompositions/ntd_4.ntd").unwrap();

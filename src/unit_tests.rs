@@ -337,10 +337,12 @@ pub mod diaz_tests{
 
 #[cfg(test)]
 pub mod graph_generation_test{
+    use std::fmt::format;
+    use petgraph::dot::Dot;
     use petgraph::visit::GetAdjacencyMatrix;
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
-    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
+    use crate::graph_generation::graph_generation::{equal_graphs, generate_graphs, generate_possible_edges};
 
 
     // todo: implement graph generation
@@ -384,14 +386,30 @@ pub mod graph_generation_test{
     #[test]
     fn test_generate_graphs()
     {
-        let graphs = generate_graphs(4, vec![(1,2),(1,4),(1,3),(3,4)]);
+        let gen_graphs = generate_graphs(4, vec![(0,1),(0,3),(0,2),(2,3)]);
+        let mut import_graphs = vec![];
 
-        let gen_1 = import_metis("data/metis_graphs/graph_generation_test/gen_1.graph").unwrap();
+        // import all graphs
+        for i in 1..17{
+            let source = format!("data/metis_graphs/graph_generation_test/gen_{}.graph",i);
+            import_graphs.push(import_metis(source).unwrap());
+        }
 
-        assert!(graphs.iter().any(|x| {*x.adjacency_matrix() == gen_1.adjacency_matrix() } ) );
-
+        // check if all imports are in the generated list of graphs
+        for g in &import_graphs{
+            assert!(gen_graphs.iter().any(|x| {equal_graphs(x,g)}));
+        }
     }
 
+    #[test]
+    fn test_equal_graphs()
+    {
+        let graph1 = import_metis("data/metis_graphs/graph_generation_test/gen_1.graph").unwrap();
+        let graph2 = import_metis("data/metis_graphs/graph_generation_test/gen_2.graph").unwrap();
+        assert!(!equal_graphs(&graph1, &graph2));
+        assert!(equal_graphs(&graph1, &graph1));
+        assert!(equal_graphs(&graph2, &graph2));
+    }
 
 
 }
