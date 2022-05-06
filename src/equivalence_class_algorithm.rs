@@ -4,6 +4,7 @@ pub mod equivalence_class_algorithm{
     use std::collections::HashMap;
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
+    use petgraph::visit::NodeIndexable;
     use crate::graph_generation::graph_generation::generate_possible_edges;
     use crate::integer_functions::integer_functions;
     use crate::integer_functions::integer_functions::Mapping;
@@ -133,10 +134,15 @@ pub mod equivalence_class_algorithm{
         /// Returns the vector of all possible edges.
         pub fn all_possible_edges(&self) -> &Vec<(usize, usize)> { &self.all_possible_edges }
 
+        /// Returns a vector of the indices of all possible edges until node p
+        pub fn possible_edges(&self, p : TreeNode) -> Option<&Vec<usize>> { self.possible_edges.get(&p) }
+
         /// A function removing all entries for a given Node.
         pub fn remove(&mut self, p : TreeNode){
             self.table.remove(&p);
         }
+
+        //todo: edges to graph u64 -> matrixgraph
     }
 
 
@@ -146,17 +152,55 @@ pub mod equivalence_class_algorithm{
     // - possible edges: mapping TreeNode -> Vec<Indices>
 
 
-    pub fn equivalence_class_algorithm(ntd : & NiceTreeDecomposition){
+    pub fn equivalence_class_algorithm(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>){
 
         let stingy_ordering = ntd.stingy_ordering();
+        let mut dpdata = DPData::new(ntd,to_graph);
 
         for p in stingy_ordering{
 
             match ntd.node_type(p){
                 Some(NodeType::Leaf) => {
+                    let unique_vertex = (*ntd.unique_vertex(p).unwrap()).index();
+
+                    // Set entries for the graph with one vertex without a self loop
+                    // Iterate over all possible images of unique_vertex in to_graph
+                    for image in 0..to_graph.node_count(){
+
+                        // sets the entry I[p,0,image] = 1 which is the number of extending
+                        // homomorphisms of the mapping (v,a) from the graph with only one vertex without a self loop
+                        // to the graph to_graph.
+                        dpdata.set(p,0, image as Mapping, 1);
+
+                    }
+
+                    // find the vertex of the edge (unique_vertex, unique_vertex)
+                    let unique_vertex_loop_index = *dpdata.edge_to_index( &( unique_vertex, unique_vertex) ).unwrap();
+
+                    // Construct the edge set which only contains the edge (unique_vertex, unique_vertex)
+                    let edge_set = 2_u32.pow(unique_vertex_loop_index as u32) as u64;
+
+                    // Set entries for the graph with one vertex with a self loop
+                    // Iterate over all possible images of unique_vertex in to_graph
+                    for image in 0..to_graph.node_count(){
+
+                        // Check if the image vertex has a self loop
+                        if to_graph.has_edge(to_graph.from_index(image), to_graph.from_index(image)){
+                            dpdata.set(p,edge_set, image as Mapping, 1);
+                        }else {
+                            dpdata.set(p,edge_set, image as Mapping, 0);
+                        }
+                    }
 
                 }
                 Some(NodeType::Introduce) => {
+
+                    // get the unique child of p
+                    let q = *ntd.unique_child(p).unwrap();
+                    // get the introduced vertex
+                    let v = *ntd.unique_vertex(p).unwrap();
+
+
 
                 }
                 Some(NodeType::Forget) => {

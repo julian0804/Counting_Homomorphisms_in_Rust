@@ -422,6 +422,7 @@ pub mod graph_generation_test{
 
 }
 
+/*
 #[cfg(test)]
 pub mod algorithm_comparison_test{
     use crate::brute_force::brute_force_homomorphism_counter::simple_brute_force;
@@ -448,6 +449,7 @@ pub mod algorithm_comparison_test{
     }
 
 }
+ */
 
 #[cfg(test)]
 pub mod equivalence_class_algorithm_test{
@@ -527,5 +529,17 @@ pub mod equivalence_class_algorithm_test{
 
         assert_eq!(*dp_data.edge_to_index(&(2 as usize,3 as usize)).unwrap(),
                    dp_data.all_possible_edges().iter().position(|x| *x == (2,3) || *x == (3,2)).unwrap());
+
+
+        // test the possible_edges function
+        let pos_edges = dp_data.possible_edges(7).unwrap();
+        let edges : Vec<(usize, usize)> = pos_edges.iter().map(|x| *dp_data.index_to_edge(x).unwrap()).collect();
+        assert!(compare_edge_lists(&vec![(0,0), (2,2), (3,3), (0,2), (0,3), (2,3)], &edges));
+
+
+        let pos_edges = dp_data.possible_edges(14).unwrap();
+        let edges : Vec<(usize, usize)> = pos_edges.iter().map(|x| *dp_data.index_to_edge(x).unwrap()).collect();
+        assert!(compare_edge_lists(&vec![(0,0), (1,1), (2,2), (3,3), (4,4), (0,1), (1,3), (0,3), (0,2), (2,3), (0,4), (3,4)], &edges));
+
     }
 }
