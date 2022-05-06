@@ -26,6 +26,7 @@ pub mod equivalence_class_algorithm{
         possible_edges : HashMap<TreeNode, Vec<usize>>, // list of possible indices of edges until the given tree node
         index_to_edge : HashMap<usize, (usize,usize)>, // maps the edge_index to the actual edge
         edge_to_index : HashMap<(usize,usize), usize>, // maps the edge to its index
+        all_possible_edges : Vec<(usize,usize)>,
     }
 
     /// Implementation of functions being necessary for writing and reading the table
@@ -60,7 +61,14 @@ pub mod equivalence_class_algorithm{
                 possible_edges.insert(*u, edges);
             }
 
-            DPData { table: HashMap::new(), nice_tree_decomposition, to_graph, sorted_bags, possible_edges, index_to_edge, edge_to_index }
+            DPData { table: HashMap::new(),
+                nice_tree_decomposition,
+                to_graph,
+                sorted_bags,
+                possible_edges,
+                index_to_edge,
+                edge_to_index,
+                all_possible_edges : all_possible_edges.clone() }
         }
 
         /// Returns the entry I[p,e,f] where p is a tree node, e a subset of possible edges and f is a mapping.
@@ -115,6 +123,15 @@ pub mod equivalence_class_algorithm{
 
         /// Given a node p, this function returns the sorted bag of p as a vector of Vertices.
         pub fn sorted_bag(&self, p : TreeNode) -> Option<&Vec<Vertex>>{ self.sorted_bags.get(&p) }
+
+        /// Given the index of an edge this functions returns the edge as a tuple
+        pub fn index_to_edge(&self, index : &usize) -> Option<&(usize, usize)> { self.index_to_edge.get(index) }
+
+        /// Given a specific edge as a tuple, return the index of this edge.
+        pub fn edge_to_index(&self, edge : &(usize,usize)) -> Option<&usize> { self.edge_to_index.get(edge) }
+
+        /// Returns the vector of all possible edges.
+        pub fn all_possible_edges(&self) -> &Vec<(usize, usize)> { &self.all_possible_edges }
 
         /// A function removing all entries for a given Node.
         pub fn remove(&mut self, p : TreeNode){

@@ -31,6 +31,23 @@ fn ntd_test_example() -> NiceTreeDecomposition{
     NiceTreeDecomposition::new(tree_structure, nodes_data, 4, 1)
 }
 
+// naive comparison of two edge lists.
+// O(len(list1) * len(list2))
+fn compare_edge_lists(list1 : &Vec<(usize, usize)>, list2 : &Vec<(usize, usize)>) -> bool
+{
+    for (u,v) in list1{
+        if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
+            return false;
+        }
+    }
+    for (u,v) in list2{
+        if !&list1.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
+            return false;
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 pub mod tree_structure_tests{
     use crate::tree_decompositions::tree_structure;
@@ -291,6 +308,20 @@ pub mod diaz_tests{
         assert_eq!(*dp_data.sorted_bag(7).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
         assert_eq!(*dp_data.sorted_bag(11).unwrap(), vec![Vertex::new(0),Vertex::new(3)]);
         assert_eq!(*dp_data.sorted_bag(2).unwrap(), vec![Vertex::new(2)]);
+
+
+        // todo : Add test for edge to index and index to edge
+        // /// Given the index of an edge this functions returns the edge as a tuple
+        //         pub fn index_to_edge(&self, index : &usize) -> Option<&(usize, usize)> { self.index_to_edge.get(index) }
+        //
+        //         /// Given a specific edge as a tuple, return the index of this edge.
+        //         pub fn edge_to_index(&self, edge : &(usize,usize)) -> Option<&usize> { self.edge_to_index.get(edge) }
+        //
+        //         /// Returns the vector of all possible edges.
+        //         pub fn all_possible_edges(&self) -> &Vec<(usize, usize)> { &self.all_possible_edges }
+
+
+
     }
 
     #[test]
@@ -343,34 +374,11 @@ pub mod graph_generation_test{
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::graph_generation::graph_generation::{equal_graphs, generate_graphs, generate_possible_edges};
-
-
-    // todo: implement graph generation
-    // todo: find way to compare graphs
-    // todo implement test where a set of graphs will be generated and the hom number will be compared between brute force and diaz
-
-
-    // naive comparison of two edge lists.
-    // O(len(list1) * len(list2))
-    fn compare_edge_lists(list1 : &Vec<(usize, usize)>, list2 : &Vec<(usize, usize)>) -> bool
-    {
-        for (u,v) in list1{
-            if !&list2.iter().any(|&i| i == (*u , *v) || i == (*v , *u) ){
-                return false;
-            }
-        }
-        for (u,v) in list2{
-            if !&list1.iter().any(|&i| i == (*u , *v) || i == (*v , *u)){
-                return false;
-            }
-        }
-        true
-    }
+    use crate::unit_tests::compare_edge_lists;
 
     #[test]
     fn test_generate_possible_edges()
     {
-
         let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
         let possible_edge_hash = generate_possible_edges(&ntd);
 
@@ -439,4 +447,85 @@ pub mod algorithm_comparison_test{
         }
     }
 
+}
+
+#[cfg(test)]
+pub mod equivalence_class_algorithm_test{
+    use crate::equivalence_class_algorithm::equivalence_class_algorithm::DPData;
+    use crate::file_handler::graph_handler::import_metis;
+    use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::tree_decompositions::tree_structure::Vertex;
+    use crate::unit_tests::compare_edge_lists;
+
+    #[test]
+    fn test_dpddata() {
+
+        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+
+        let mut dp_data = DPData::new(&ntd, &to_graph);
+
+        // test empty table
+        assert_eq!(dp_data.get(&4, &5,&10) , None);
+        assert_eq!(dp_data.get(&9, &2, &3) , None);
+
+        // try to set the values
+        dp_data.set(4, 5, 10, 5);
+        dp_data.set(9,2,3, 2);
+
+        // Check values again
+        assert_eq!(dp_data.get(&4, &5,&10) , Some(&5));
+        assert_eq!(dp_data.get(&9, &2, &3) , Some(&2));
+
+        // Check table_apply
+        assert_eq!(dp_data.table_apply(30,1), 3);
+        assert_eq!(dp_data.table_apply(28,0), 0);
+
+        // Check table_extend
+        assert_eq!(dp_data.table_extend(15, 1, 2), 59);
+        assert_eq!(dp_data.table_extend(0,2,3), 48);
+
+        // Check table_reduce
+        assert_eq!(dp_data.table_reduce(59,0), 14);
+        assert_eq!(dp_data.table_reduce(15,1), 3);
+
+        // Check max_bag_mappings
+        assert_eq!(dp_data.max_bag_mappings(16), 64);
+        assert_eq!(dp_data.max_bag_mappings(0), 4);
+        assert_eq!(dp_data.max_bag_mappings(5), 16);
+
+        // check sorted bags
+        assert_eq!(*dp_data.sorted_bag(8).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(16).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(7).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(11).unwrap(), vec![Vertex::new(0),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(2).unwrap(), vec![Vertex::new(2)]);
+
+        assert_eq!(*dp_data.sorted_bag(8).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(16).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(7).unwrap(), vec![Vertex::new(0),Vertex::new(2),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(11).unwrap(), vec![Vertex::new(0),Vertex::new(3)]);
+        assert_eq!(*dp_data.sorted_bag(2).unwrap(), vec![Vertex::new(2)]);
+
+        // continue with testcases for
+
+        assert!(compare_edge_lists(dp_data.all_possible_edges(),
+                                   &vec![(0,0), (1,1), (2,2), (3,3), (4,4), (0,1), (1,3), (0,3), (0,2), (2,3), (0,4), (3,4)]));
+        assert!(!compare_edge_lists(dp_data.all_possible_edges(),
+                                   &vec![(0,0), (1,1), (2,2), (3,3), (4,4), (0,1), (1,3), (0,3), (0,2), (2,3), (0,4)]));
+
+        // test for index to edge
+        assert_eq!(dp_data.index_to_edge(&3), dp_data.all_possible_edges().get(3));
+        assert_eq!(dp_data.index_to_edge(&4), dp_data.all_possible_edges().get(4));
+        assert_eq!(dp_data.index_to_edge(&6), dp_data.all_possible_edges().get(6));
+        assert_ne!(dp_data.index_to_edge(&2), dp_data.all_possible_edges().get(3));
+        assert_ne!(dp_data.index_to_edge(&3), dp_data.all_possible_edges().get(4));
+
+        // test for edge to index
+        assert_eq!(*dp_data.edge_to_index(&(0 as usize,0 as usize)).unwrap(),
+                   dp_data.all_possible_edges().iter().position(|x| *x == (0,0)).unwrap());
+
+        assert_eq!(*dp_data.edge_to_index(&(2 as usize,3 as usize)).unwrap(),
+                   dp_data.all_possible_edges().iter().position(|x| *x == (2,3) || *x == (3,2)).unwrap());
+    }
 }
