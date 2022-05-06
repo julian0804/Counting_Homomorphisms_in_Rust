@@ -453,9 +453,13 @@ pub mod algorithm_comparison_test{
 
 #[cfg(test)]
 pub mod equivalence_class_algorithm_test{
-    use crate::equivalence_class_algorithm::equivalence_class_algorithm::DPData;
+    use std::arch::x86_64::_mm256_div_ps;
+    use petgraph::dot::Dot;
+    use crate::diaz::diaz_algorithm::diaz;
+    use crate::equivalence_class_algorithm::equivalence_class_algorithm::{DPData, equivalence_class_algorithm};
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
+    use crate::graph_generation::graph_generation::{equal_graphs, generate_graphs, generate_possible_edges};
     use crate::tree_decompositions::tree_structure::Vertex;
     use crate::unit_tests::compare_edge_lists;
 
@@ -540,6 +544,66 @@ pub mod equivalence_class_algorithm_test{
         let pos_edges = dp_data.possible_edges(14).unwrap();
         let edges : Vec<(usize, usize)> = pos_edges.iter().map(|x| *dp_data.index_to_edge(x).unwrap()).collect();
         assert!(compare_edge_lists(&vec![(0,0), (1,1), (2,2), (3,3), (4,4), (0,1), (1,3), (0,3), (0,2), (2,3), (0,4), (3,4)], &edges));
+
+
+        // test edges_to_integer_representation
+        // 2^0 + 2^4 + 2^7 + 2^1 + 2^2 = 1 + 16 + 128 + 2 + 4 = 151
+        let edges = vec![0,4,7,1,2];
+        assert_eq!(dp_data.edges_to_integer_representation(&edges), 151);
+
+        // 2^0 = 1
+        let edges = vec![0];
+        assert_eq!(dp_data.edges_to_integer_representation(&edges), 1);
+
+        // no edge
+        let edges = vec![];
+        assert_eq!(dp_data.edges_to_integer_representation(&edges), 0);
+
+
+        // test the intersection
+        // a = [0,2,3] -> 2^0 + 2^2 + 2^3 = 1 + 4 + 8 = 13
+        // b = [0,3,5] -> 2^0 + 2^3 + 2^5 = 1 + 8 + 32 = 41
+        // intersection = [0, 3] -> 2^0 + 2^3 = 1 + 8 = 9
+        assert_eq!(dp_data.intersection(13,41), 9);
+
+        // test edges_to_graph()
+        let mut edges = vec![];
+        edges.push(*dp_data.edge_to_index(&(0,0)).unwrap());
+        edges.push(*dp_data.edge_to_index(&(0,1)).unwrap());
+        edges.push(*dp_data.edge_to_index(&(4,3)).unwrap());
+
+        let edges_integer = dp_data.edges_to_integer_representation(&edges);
+        let graph = dp_data.edges_to_graph(edges_integer);
+
+        let imported_reference = import_metis("data/metis_graphs/equivalence_class_algorithm_tests/test_edges_to_graph.graph").unwrap();
+        assert!(equal_graphs(&graph, &imported_reference));
+
+    }
+
+    #[test]
+    fn test_equivalence_class_algorithm()
+    {
+        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+
+        let graphs_hom = equivalence_class_algorithm(&ntd, &to_graph);
+
+        let graphs = generate_graphs(ntd.vertex_count() as u64, generate_possible_edges(&ntd).get(&ntd.root()).unwrap().clone());
+
+        for graph in &graphs{
+
+            println!("{:?}", Dot::new(graph));
+
+            let pos = graphs_hom.iter().position( |(g,h)| {equal_graphs(g,graph)} ).unwrap();
+            let diaz = diaz(graph, &ntd, &to_graph);
+
+            let (g,h) = graphs_hom.get(pos).unwrap();
+
+            println!("{:?}", Dot::new(g));
+
+            assert_eq!(diaz, *h);
+
+        }
 
     }
 }

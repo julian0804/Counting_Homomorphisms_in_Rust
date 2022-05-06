@@ -1,44 +1,3 @@
-//! Algorithms for counting graph homomorphisms
-//!
-
-/// A module containing all functions for explicit edge and graph generation.
-pub mod generation {
-    use itertools::Itertools;
-    use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
-    use petgraph::Undirected;
-    use crate::graph_structures::graph_structures::nice_tree_decomposition::NiceTreeDecomposition;
-
-
-    /// Given a number of vertices and a set of possible edges this function computes all graphs
-    /// with a subset of the possible edges and the same number of vertices.
-    pub fn generate_graphs(number_of_vertices: u64, possible_edges : Vec<(usize, usize)>) -> Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>{
-
-        let mut graphs : Vec<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>> = vec![];
-
-        // iterate over the powerset of possible edges
-        for edges in possible_edges.iter().powerset().collect::<Vec<_>>(){
-
-            let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
-
-            // add vertices
-            for i in 0..number_of_vertices {
-                graph.add_node(());
-            }
-
-            // add edges
-            for (u,v) in edges{
-                graph.add_edge(NodeIndex::new(*u),NodeIndex::new(*v), ());
-            }
-
-            graphs.push(graph);
-        }
-
-        graphs
-
-    }
-
-
-}
 
 pub mod first_approach{
     use std::collections::{HashMap, HashSet};
@@ -386,20 +345,6 @@ pub mod first_approach{
                             }
                             n
                         };
-
-                        //let neighbours : Vec<Vertex> = from_graph.neighbors(v).collect();
-                        //let mut neighbour_set: HashSet<Vertex> = HashSet::from_iter(neighbours);
-                        let mut s_q: Vec<Vertex> = vec![];
-                        for edge in edges {
-                            let (a, b) = all_possible_edges[*edge];
-                            if a == v.index() {
-                                s_q.push(Vertex::new(b));
-                            }
-
-                            if b == v.index() {
-                                s_q.push(Vertex::new(a));
-                            }
-                        }
 
                         for f in 0..table.max_bag_mappings(p) {
                             let mut sum = 0;

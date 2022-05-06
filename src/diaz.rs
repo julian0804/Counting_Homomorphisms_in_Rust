@@ -143,6 +143,7 @@ pub mod diaz_algorithm {
 
 
                     let sorted_p_bag = dp_data.sorted_bag(p).unwrap();
+
                     // maps vertex to its significance in the bag of p
                     let mut significance_hash = HashMap::new();
                     for i in 0..sorted_p_bag.len() {
