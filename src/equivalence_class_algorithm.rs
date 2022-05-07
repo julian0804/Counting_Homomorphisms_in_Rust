@@ -205,10 +205,8 @@ pub mod equivalence_class_algorithm{
 
         for p in stingy_ordering{
 
-            println!("######################### node {:?} ###########################", p);
             match ntd.node_type(p){
                 Some(NodeType::Leaf) =>  {
-                    println!("leaf");
                     let unique_vertex = (*ntd.unique_vertex(p).unwrap()).index();
 
                     // Set entries for the graph with one vertex without a self loop
@@ -243,7 +241,6 @@ pub mod equivalence_class_algorithm{
                 }
                 Some(NodeType::Introduce) => {
 
-                    println!("Introduce");
 
                     // get the unique child of p
                     let q = *ntd.unique_child(p).unwrap();
@@ -283,23 +280,23 @@ pub mod equivalence_class_algorithm{
 
                         let mut s_q = vec![];
 
+                        let v_index = v.index();
                         // generate the set s_q, which corresponds to the neighbors of v in edges
                         for edge_index in &edges {
                             let (x,u) = dpdata.index_to_edge(*edge_index).unwrap();
 
-                            if *x == v.index(){
+                            if *x == v_index {
+                                if !s_q.contains(u) {
+                                    s_q.push(*u);
+                                }
+                            }
+
+                            if *u == v_index{
                                 if !s_q.contains(x){
                                     s_q.push(*x);
                                 }
                             }
-
-                            if *u == v.index(){
-                                if !s_q.contains(u){
-                                    s_q.push(*u);
-                                }
-                            }
                         }
-
 
                         let edges_without_ref = edges.iter().map(|x| { **x } ).collect();
 
@@ -345,7 +342,6 @@ pub mod equivalence_class_algorithm{
                 }
                 Some(NodeType::Forget) => {
 
-                    println!("Forget");
                     // get the unique child of p
                     let q = *ntd.unique_child(p).unwrap();
                     // get the introduced vertex
@@ -389,8 +385,6 @@ pub mod equivalence_class_algorithm{
 
                 }
                 Some(NodeType::Join) => {
-
-                    println!("Join");
 
                     if let Some(children) = ntd.children(p){
                         let q1 = children.get(0).unwrap();

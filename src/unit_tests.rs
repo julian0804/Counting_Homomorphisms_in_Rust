@@ -592,14 +592,10 @@ pub mod equivalence_class_algorithm_test{
 
         for graph in &graphs{
 
-            println!("{:?}", Dot::new(graph));
-
             let pos = graphs_hom.iter().position( |(g,h)| {equal_graphs(g,graph)} ).unwrap();
             let diaz = diaz(graph, &ntd, &to_graph);
 
             let (g,h) = graphs_hom.get(pos).unwrap();
-
-            println!("{:?}", Dot::new(g));
 
             assert_eq!(diaz, *h);
 
