@@ -422,7 +422,7 @@ pub mod graph_generation_test{
 
 }
 
-/*
+
 #[cfg(test)]
 pub mod algorithm_comparison_test{
     use crate::brute_force::brute_force_homomorphism_counter::simple_brute_force;
@@ -449,7 +449,6 @@ pub mod algorithm_comparison_test{
     }
 
 }
- */
 
 #[cfg(test)]
 pub mod equivalence_class_algorithm_test{
