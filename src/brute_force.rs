@@ -3,8 +3,10 @@ pub mod brute_force_homomorphism_counter{
 
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
+    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
     use crate::integer_functions::integer_functions;
     use crate::integer_functions::integer_functions::{apply, Mapping, max_mappings};
+    use crate::tree_decompositions::nice_tree_decomposition::NiceTreeDecomposition;
     use crate::tree_decompositions::tree_structure::Vertex;
 
     /// a simple brute force algorithm which iterates over all possible mappings from "from_graph" to "to_graph"
@@ -46,5 +48,24 @@ pub mod brute_force_homomorphism_counter{
             if check_mapping(f){counter += 1;}
         }
         counter
+    }
+
+
+    /// Implementation of simple_brute_force for all graphs in $H_\tau$
+    pub fn simple_brute_force_for_ntd_set(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)>{
+        let mut result = vec![];
+
+        let possible_edges = generate_possible_edges(ntd);
+
+        let graphs = generate_graphs(ntd.vertex_count() as u64,
+                                     possible_edges.get(&ntd.root()).unwrap().clone() );
+
+        for graph in graphs{
+
+            let hom_number = simple_brute_force(&graph, to_graph);
+            result.push(( graph, hom_number));
+        }
+
+        result
     }
 }
