@@ -186,7 +186,7 @@ pub mod tree_decomposition_handler_tests{
 
 #[cfg(test)]
 pub mod graph_handler_tests{
-    use crate::file_handler::graph_handler::import_metis;
+    use crate::file_handler::graph_handler::{import_dimacs, import_metis};
     use crate::tree_decompositions::tree_structure::Vertex;
 
     #[test]
@@ -202,6 +202,27 @@ pub mod graph_handler_tests{
             (6, 5), (6, 3)];
 
         let g = import_metis("data/metis_graphs/tiny_01.graph").unwrap();
+
+        assert_eq!(g.node_count(), 7);
+        assert_eq!(g.edge_count(), 11);
+        for (a,b) in edges{
+            assert!(g.has_edge(Vertex::new(a), Vertex::new(b)));
+        }
+    }
+
+    #[test]
+    pub fn test_import_gr()
+    {
+        let edges = vec![
+            (0, 4), (0, 2), (0, 1),
+            (1, 0), (1, 2), (1, 3),
+            (2, 4), (2, 3), (2, 1), (2, 0),
+            (3, 1), (3, 2), (3, 5), (3, 6),
+            (4, 0), (4, 2), (4, 5),
+            (5, 4), (5, 3), (5, 6),
+            (6, 5), (6, 3)];
+
+        let g = import_dimacs("data/dimacs_graphs/tiny_01.gr").unwrap();
 
         assert_eq!(g.node_count(), 7);
         assert_eq!(g.edge_count(), 11);

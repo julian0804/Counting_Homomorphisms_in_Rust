@@ -131,8 +131,8 @@ pub mod graph_handler {
     use crate::file_handler::read_lines;
     use crate::tree_decompositions::tree_structure::Vertex;
 
-    /// Given a graph file f, import this graph as a Petgraph Matrix_Graph.
-    /// Node-Indies will be subtracted by one (1,..,N) -> (0,..,N-1)
+    /// Given a .graph file f, import this graph as a Petgraph Matrix_Graph.
+    /// Node-Indices will be subtracted by one (1,..,N) -> (0,..,N-1)
     /// More information on Metis could be found under https://www.lrz.de/services/software/mathematik/metis/metis_5_0.pdf
     pub fn import_metis<P>(filename : P) -> Option<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>
         where P: AsRef<Path>
@@ -190,5 +190,58 @@ pub mod graph_handler {
         }
         Some(graph)
     }
+
+    /// Given a .gr file used by DIMACS challenges, import this graph as a Petgraph Matrix_Graph
+    /// Node-Indices will be subtracted by one (1,..,N) -> (0,..,N-1)
+    /// More Information on the .gr format can be found under https://github.com/PACE-challenge/Treewidth
+    pub fn import_dimacs<P>(filename : P) -> Option<petgraph::matrix_graph::MatrixGraph<(),(), Undirected>>
+        where P: AsRef<Path>{
+
+        let mut graph = petgraph::matrix_graph::MatrixGraph::new_undirected();
+
+        let mut number_of_vertices : usize = 0;
+        let mut number_of_edges : usize = 0;
+
+        if let Ok(lines) = read_lines(filename) {
+
+            // go through each line of the file
+            for line in lines {
+                let line_string = line.unwrap();
+
+                let mut args = line_string.split(" ");
+                // get the first argument, which denotes the function of this line
+                let type_arg = args.next();
+
+                // c means comment -> ignore
+                // empty lines are vertices without out-going edges
+                match type_arg {
+                    Some("c") => { continue; }
+                    Some("p") => {
+                        let problem_descriptor = args.next();
+
+                        number_of_vertices = args.next().unwrap().parse::<usize>().unwrap();
+                        number_of_edges = args.next().unwrap().parse::<usize>().unwrap();
+
+                        for _ in 1..(number_of_vertices + 1){
+                            graph.add_node(());
+                        }
+
+                    }
+                    Some(_) => {
+                        let first_vertex = type_arg.unwrap().parse::<usize>().unwrap() - 1;
+                        let second_vertex = args.next().unwrap().parse::<usize>().unwrap() - 1;
+
+                        if !graph.has_edge(Vertex::new(first_vertex), Vertex::new(second_vertex)) {
+                            graph.add_edge(Vertex::new(first_vertex), Vertex::new(second_vertex), ());
+                        }
+                    }
+                    None => { continue; }
+                }
+            }
+        }
+
+        Some(graph)
+    }
+
 }
 
