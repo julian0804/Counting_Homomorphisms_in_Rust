@@ -192,6 +192,9 @@ pub mod nice_tree_decomposition{
 
         /// ## Structural functions on tree nodes
 
+        /// Returns the width of the nice tree decomposition
+        pub fn width(&self) -> u32 { self.width }
+
         /// An Interface function for the root() method of the private field tree_structure.
         pub fn root(&self) -> TreeNode{
             self.tree_structure.root()
