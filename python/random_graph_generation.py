@@ -5,7 +5,7 @@ import random
 FILE_PATH = '../data/metis_graphs/auto_generated_graphs/'
 
 def random_graph(n, m):
-    text = "# Random generated graph with " + str(n) + " vertices and " + str(m) + " edges. \n"
+    text = "% Random generated graph with " + str(n) + " vertices and " + str(m) + " edges. \n"
     text += str(n) + " " + str(m)
 
     adjacency_matrix = [[0 for x in range(n)] for y in range(n)]
@@ -29,7 +29,7 @@ def random_graph(n, m):
             if adjacency_matrix[i][j] == 1:
 
                 if first:
-                    text += str(j)
+                    text += str(j + 1)
                     first = False
                 else:
                     text += " " + str(j)
@@ -53,13 +53,13 @@ def generate_graph_for_fixed_n_and_m(n,m):
 # A function calculating all graphs
 def generate_graphs():
 
-    max_exponent = 10;
+    max_exponent = 10
 
     for i in range(2, max_exponent + 1):
         print("generating graph with " + str(2**i) + " vertices")
         # random graph with 2**i vertices and random number of edges between 2**i and (2**i) ** 2
 
-        generate_graph_for_fixed_n_and_m(2**i, random.randint(2**i , (2**i) * (2**i - 1) * (1/2) ))
+        generate_graph_for_fixed_n_and_m(2**i, random.randint(2**i , (2**i) * (2**i - 1) * (1/2)))
 
 
 generate_graphs()
