@@ -4,7 +4,8 @@ n <number> <NodeType> <list of containing vertices>
 .
 .
 .
-n <number> <NodeType> <list of containing vertices>
+n <number> <NodeType> <list o
+f containing vertices>
 a <parent Node> <child Node>
 .
 .

@@ -197,7 +197,7 @@ pub mod equivalence_class_algorithm{
     // - Index to edge
     // - possible edges: mapping TreeNode -> Vec<Indices>
 
-
+    /// implementation of the equivalence class algorithm
     pub fn equivalence_class_algorithm(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)> {
 
         let stingy_ordering = ntd.stingy_ordering();
@@ -429,8 +429,6 @@ pub mod equivalence_class_algorithm{
                 }
                 None => {}
             }
-
-            //println!("TABLE: {:?}", dpdata.table)
 
         }
 

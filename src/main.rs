@@ -1,5 +1,6 @@
 extern crate core;
 
+use std::fs;
 use std::time::Instant;
 use Counting_Homomorphisms::diaz::diaz_algorithm::diaz;
 use Counting_Homomorphisms::equivalence_class_algorithm::equivalence_class_algorithm::equivalence_class_algorithm;
@@ -10,7 +11,7 @@ use Counting_Homomorphisms::graph_generation::graph_generation::{generate_graphs
 fn main(){
 
     let ntd = import_ntd("data/nice_tree_decompositions/ntd_k_5.ntd").unwrap();
-    let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+    let to_graph = import_metis("data/metis_graphs/auto_generated_graphs/randgraph_16_47.graph").unwrap();
 
 
     let start = Instant::now();
@@ -43,5 +44,14 @@ fn main(){
     println!("Time elapsed for equivalence class algorithm {:?}", duration);
 
 
+    /*
+    let paths = fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds").unwrap();
+
+    for path in paths {
+
+
+    }
+
+     */
 
 }
