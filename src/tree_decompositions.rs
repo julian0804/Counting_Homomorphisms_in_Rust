@@ -94,9 +94,7 @@ pub mod tree_structure{
         /// node 0 and going "up" until the root has been reached.
         pub fn root(&self) -> TreeNode{
             let mut current_node: TreeNode = 0;
-            loop {
-                if let Some(&parent) = self.parent(current_node) { current_node = parent; } else { break }
-            }
+            while let Some(&parent) = self.parent(current_node) {current_node = parent;}
             current_node
         }
     }

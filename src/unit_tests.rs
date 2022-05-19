@@ -94,7 +94,7 @@ pub mod nice_tree_decomposition_tests{
         let ntd = ntd_test_example();
         assert_eq!(ntd.stingy_ordering(), vec![0,1,2,3,4,5,6,7,8,9]);
 
-        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         assert_eq!(ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
     }
 
@@ -180,7 +180,7 @@ pub mod tree_decomposition_handler_tests{
     #[test]
     pub fn test_ntd_import() {
         let ntd = ntd_test_example();
-        assert_eq!(import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example.ntd").unwrap(), ntd);
+        assert_eq!(import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_9.ntd").unwrap(), ntd);
     }
 }
 
@@ -284,7 +284,7 @@ pub mod diaz_tests{
 
         let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
 
         let mut dp_data = diaz::diaz_algorithm::DPData::new(&from_graph, &to_graph, &ntd);
 
@@ -350,37 +350,37 @@ pub mod diaz_tests{
 
         let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
-        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,1280);
 
         let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
-        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,256);
 
         let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_7.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/ntd_4.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_6.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,960);
 
@@ -394,13 +394,13 @@ pub mod graph_generation_test{
     use petgraph::visit::GetAdjacencyMatrix;
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
-    use crate::graph_generation::graph_generation::{equal_graphs, generate_graphs, generate_possible_edges};
+    use crate::graph_generation::graph_generation_algorithms::{equal_graphs, generate_graphs, generate_possible_edges};
     use crate::unit_tests::compare_edge_lists;
 
     #[test]
     fn test_generate_possible_edges()
     {
-        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let possible_edge_hash = generate_possible_edges(&ntd);
 
         assert!(compare_edge_lists(possible_edge_hash.get(&1).unwrap() , &vec![(4,2), (2,2), (4,4)] ));
@@ -450,12 +450,12 @@ pub mod algorithm_comparison_test{
     use crate::diaz::diaz_algorithm::diaz;
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
-    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
+    use crate::graph_generation::graph_generation_algorithms::{generate_graphs, generate_possible_edges};
 
     #[test]
     fn compare_brute_force_with_diaz()
     {
-        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let possible_edges = generate_possible_edges(&ntd);
 
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
@@ -476,10 +476,10 @@ pub mod equivalence_class_algorithm_test{
     use std::arch::x86_64::_mm256_div_ps;
     use petgraph::dot::Dot;
     use crate::diaz::diaz_algorithm::diaz;
-    use crate::equivalence_class_algorithm::equivalence_class_algorithm::{DPData, equivalence_class_algorithm};
+    use crate::equivalence_class_algorithm::algorithm::{DPData, equivalence_class_algorithm};
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
-    use crate::graph_generation::graph_generation::{equal_graphs, generate_graphs, generate_possible_edges};
+    use crate::graph_generation::graph_generation_algorithms::{equal_graphs, generate_graphs, generate_possible_edges};
     use crate::tree_decompositions::tree_structure::Vertex;
     use crate::unit_tests::compare_edge_lists;
 
@@ -487,7 +487,7 @@ pub mod equivalence_class_algorithm_test{
     fn test_dpddata() {
 
         let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
 
         let mut dp_data = DPData::new(&ntd, &to_graph);
 
@@ -603,7 +603,7 @@ pub mod equivalence_class_algorithm_test{
     #[test]
     fn test_equivalence_class_algorithm()
     {
-        let ntd = import_ntd("data/nice_tree_decompositions/example_3.ntd").unwrap();
+        let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
 
         let graphs_hom = equivalence_class_algorithm(&ntd, &to_graph);
