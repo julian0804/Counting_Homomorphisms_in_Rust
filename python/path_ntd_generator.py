@@ -12,7 +12,7 @@ FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/path_ntds/'
 def path_ntd(n):
     output = "# auto generated nice path tree decomposition with " + str(n) + " vertices and " + str((2 * n - 1)) +  " possible edges. \n"
     output += "s " + str(2*n) + " 2 " + str(n) + "\n"
-    output += "n 1 l 1 \n"
+    output += "n 1 l 1\n"
 
     node_counter = 2
 
@@ -22,10 +22,12 @@ def path_ntd(n):
         output += "n " + str(node_counter) + " f " + str(i) + "\n"
         node_counter += 1
 
-    output += "n " + str(node_counter) + " f \n"
+    output += "n " + str(node_counter) + " f\n"
 
     for i in range(1, node_counter):
-        output += "a " + str(i + 1) + " " + str(i) + "\n"
+        output += "a " + str(i + 1) + " " + str(i)
+        if i < node_counter - 1:
+            output += "\n"
 
     return output
 
