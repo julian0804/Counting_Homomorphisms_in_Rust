@@ -3,9 +3,9 @@ pub mod brute_force_homomorphism_counter{
 
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
-    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
-    use crate::integer_functions::integer_functions;
-    use crate::integer_functions::integer_functions::{apply, Mapping, max_mappings};
+    use crate::graph_generation::graph_generation_algorithms::{generate_graphs, generate_possible_edges};
+    use crate::integer_functions::integer_functions_methods;
+    use crate::integer_functions::integer_functions_methods::{apply, Mapping, max_mappings};
     use crate::tree_decompositions::nice_tree_decomposition::NiceTreeDecomposition;
     use crate::tree_decompositions::tree_structure::Vertex;
 
@@ -26,8 +26,8 @@ pub mod brute_force_homomorphism_counter{
                 for v in 0..h{
                     if from_graph.has_edge(Vertex::new(u ), Vertex::new(v )){
 
-                        let map_u = integer_functions::apply(g as Mapping,f ,u as Mapping);
-                        let map_v = integer_functions::apply(g as Mapping,f ,v as Mapping);
+                        let map_u = integer_functions_methods::apply(g as Mapping, f, u as Mapping);
+                        let map_v = integer_functions_methods::apply(g as Mapping, f, v as Mapping);
 
                         if !to_graph.has_edge(Vertex::new(map_u as usize), Vertex::new(map_v as usize))
                         {

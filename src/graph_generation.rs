@@ -1,5 +1,5 @@
 /// A module containing all functions necessary for generating graphs.
-pub mod graph_generation{
+pub mod graph_generation_algorithms {
     use std::collections::HashMap;
     use itertools::Itertools;
     use petgraph::matrix_graph::{MatrixGraph, NodeIndex};

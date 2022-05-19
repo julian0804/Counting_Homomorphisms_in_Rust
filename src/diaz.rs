@@ -6,9 +6,9 @@ pub mod diaz_algorithm {
     use petgraph::matrix_graph::MatrixGraph;
     use petgraph::Undirected;
     use petgraph::visit::NodeIndexable;
-    use crate::graph_generation::graph_generation::{generate_graphs, generate_possible_edges};
-    use crate::integer_functions::integer_functions;
-    use crate::integer_functions::integer_functions::Mapping;
+    use crate::graph_generation::graph_generation_algorithms::{generate_graphs, generate_possible_edges};
+    use crate::integer_functions::integer_functions_methods;
+    use crate::integer_functions::integer_functions_methods::Mapping;
     use crate::tree_decompositions::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
     use crate::tree_decompositions::tree_structure::{TreeNode, Vertex};
 
@@ -48,24 +48,24 @@ pub mod diaz_algorithm {
 
         /// Apply function where the dimension is already set to |V(G)|.
         pub fn table_apply(&self, f : Mapping, s : Mapping) -> Mapping{
-            integer_functions::apply(self.to_graph.node_count() as Mapping, f, s)
+            integer_functions_methods::apply(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /// Extend function where the dimension is already set to |V(G)|.
         pub fn table_extend(&self, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
-            integer_functions::extend(self.to_graph.node_count() as Mapping, f, s, v)
+            integer_functions_methods::extend(self.to_graph.node_count() as Mapping, f, s, v)
         }
 
         /// Reduce function where the dimension is already set to |V(G)|.
         pub fn table_reduce(&self, f : Mapping, s : Mapping) -> Mapping{
-            integer_functions::reduce(self.to_graph.node_count() as Mapping, f, s)
+            integer_functions_methods::reduce(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /// This is basically the max mapping function applied to the bag(p) and |V(G)|.
         /// It returns the number of mappings from bag(p) to |V(G)|
         pub fn max_bag_mappings(&self, node : TreeNode) -> Mapping{
-            integer_functions::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
-                                            self.to_graph.node_count() as Mapping )
+            integer_functions_methods::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
+                                                    self.to_graph.node_count() as Mapping )
         }
 
         /// Create a hashmap which maps each node p to a sorted vector of Vertices representing the bag of p.
@@ -128,8 +128,8 @@ pub mod diaz_algorithm {
                     let v = *ntd.unique_vertex(p).unwrap();
 
 
-                    let mut neighbours_of_v: HashSet<Vertex> = HashSet::from_iter(from_graph.neighbors(v));
-                    let mut s_q : Vec<&Vertex> = neighbours_of_v.intersection(ntd.bag(p).unwrap()).collect();
+                    let neighbours_of_v: HashSet<Vertex> = HashSet::from_iter(from_graph.neighbors(v));
+                    let s_q : Vec<&Vertex> = neighbours_of_v.intersection(ntd.bag(p).unwrap()).collect();
 
 
                     // sorted bag of q
@@ -147,11 +147,18 @@ pub mod diaz_algorithm {
 
                     // maps vertex to its significance in the bag of p
                     let mut significance_hash = HashMap::new();
+                    /*
                     for i in 0..sorted_p_bag.len() {
                         significance_hash.insert(sorted_p_bag[i], i);
                     }
 
-                    // iterate over all new mappings by inserting (introduced_vertex,a)
+                     */
+
+                    for (i, item) in sorted_p_bag.iter().enumerate() {
+                        significance_hash.insert(*item, i);
+                    }
+
+                        // iterate over all new mappings by inserting (introduced_vertex,a)
                     for f_q in 0..dp_data.max_bag_mappings(q){
                         for a in 0..to_graph.node_count(){
 
@@ -178,7 +185,7 @@ pub mod diaz_algorithm {
                                 value
                             };
 
-                            dp_data.set(p, f_prime,dp_data.get(&q, &f_q).unwrap().clone() * (condition as u64 ));
+                            dp_data.set(p, f_prime,*dp_data.get(&q, &f_q).unwrap() * (condition as u64 ));
                         }
                     }
 
@@ -236,7 +243,7 @@ pub mod diaz_algorithm {
 
         }
 
-        dp_data.get(&ntd.root(), &0).unwrap().clone()
+        *dp_data.get(&ntd.root(), &0).unwrap()
     }
 
     /// Implementation of diaz et all for all graphs in $H_\tau$

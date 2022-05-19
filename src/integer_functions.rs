@@ -1,7 +1,7 @@
 /// A module containing operations for working with integer functions as
 /// presented in the paper "Counting subgraph patterns in large graphs" by
 /// Emil Ruhwald Nielsen, Otto Stadel Clausen and Elisabeth Terp Reeve.
-pub mod integer_functions {
+pub mod integer_functions_methods {
     use std::collections::HashMap;
 
     /// Defining the type Mapping to distinguish the operation from normal u64 variables.
@@ -53,7 +53,7 @@ pub mod integer_functions {
         while rest > 0 {
             mapping.insert(pos, rest % n);
             pos += 1;
-            rest = rest / n;
+            rest /= n;
         }
 
         mapping

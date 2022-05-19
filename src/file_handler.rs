@@ -47,7 +47,7 @@ pub mod tree_decomposition_handler {
 
                 let line_string = line.unwrap();
                 // get all args divided by a space
-                let mut args = line_string.split(" ");
+                let mut args = line_string.split(' ');
                 // get the first argument, which denotes the function of this line
                 let type_arg = args.next();
 
@@ -80,13 +80,12 @@ pub mod tree_decomposition_handler {
                         // This closure is used to construct the bag out of the following arguments
                         let mut constructed_bag = || {
                             let mut bag = Bag::new();
-                            loop {
-                                if let Some(v) = args.next() {
-                                    bag.insert(Vertex::new((v.parse::<u64>().unwrap() - 1) as usize) );
-                                } else {
-                                    break;
-                                }
+
+                            for v in args.by_ref(){
+                                bag.insert(Vertex::new((v.parse::<u64>().unwrap() - 1) as usize) );
                             }
+
+
                             bag
                         };
 
@@ -161,7 +160,7 @@ pub mod graph_handler {
                 }
 
                 // separate entries by space
-                let mut args = content.split(" ");
+                let mut args = content.split(' ');
 
                 if number_of_vertices == 0 {
                     number_of_vertices = args.next().unwrap().parse::<usize>().unwrap();
@@ -173,14 +172,10 @@ pub mod graph_handler {
                     continue;
                 }
 
-                loop {
-                    if let Some(ver) = args.next() {
-                        let value = ver.parse::<usize>().unwrap();
-                        if !graph.has_edge(Vertex::new(current_vertex), Vertex::new(value - 1)) {
-                            graph.add_edge(Vertex::new(current_vertex), Vertex::new(value - 1), ());
-                        }
-                    } else {
-                        break;
+                for ver in args {
+                    let value = ver.parse::<usize>().unwrap();
+                    if !graph.has_edge(Vertex::new(current_vertex), Vertex::new(value - 1)) {
+                        graph.add_edge(Vertex::new(current_vertex), Vertex::new(value - 1), ());
                     }
                 }
 
@@ -208,7 +203,7 @@ pub mod graph_handler {
             for line in lines {
                 let line_string = line.unwrap();
 
-                let mut args = line_string.split(" ");
+                let mut args = line_string.split(' ');
                 // get the first argument, which denotes the function of this line
                 let type_arg = args.next();
 

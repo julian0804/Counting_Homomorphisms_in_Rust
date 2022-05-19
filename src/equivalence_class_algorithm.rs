@@ -1,6 +1,6 @@
 /// This module contains the first approach to speed up the
 /// algorithm of diaz et all.
-pub mod equivalence_class_algorithm{
+pub mod algorithm {
     use std::arch::x86_64::_mm256_div_ps;
     use std::collections::HashMap;
     use itertools::Itertools;
@@ -8,9 +8,9 @@ pub mod equivalence_class_algorithm{
     use petgraph::Undirected;
     use petgraph::visit::NodeIndexable;
     use crate::diaz::diaz_algorithm::diaz;
-    use crate::graph_generation::graph_generation::generate_possible_edges;
-    use crate::integer_functions::integer_functions;
-    use crate::integer_functions::integer_functions::Mapping;
+    use crate::graph_generation::graph_generation_algorithms::generate_possible_edges;
+    use crate::integer_functions::integer_functions_methods;
+    use crate::integer_functions::integer_functions_methods::Mapping;
     use crate::tree_decompositions::nice_tree_decomposition::{NiceTreeDecomposition, NodeType};
     use crate::tree_decompositions::tree_structure::{TreeNode, Vertex};
 
@@ -92,24 +92,24 @@ pub mod equivalence_class_algorithm{
 
         /// Apply function where the dimension is already set to |V(G)|.
         pub fn table_apply(&self, f : Mapping, s : Mapping) -> Mapping{
-            integer_functions::apply(self.to_graph.node_count() as Mapping, f, s)
+            integer_functions_methods::apply(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /// Extend function where the dimension is already set to |V(G)|.
         pub fn table_extend(&self, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
-            integer_functions::extend(self.to_graph.node_count() as Mapping, f, s, v)
+            integer_functions_methods::extend(self.to_graph.node_count() as Mapping, f, s, v)
         }
 
         /// Reduce function where the dimension is already set to |V(G)|.
         pub fn table_reduce(&self, f : Mapping, s : Mapping) -> Mapping{
-            integer_functions::reduce(self.to_graph.node_count() as Mapping, f, s)
+            integer_functions_methods::reduce(self.to_graph.node_count() as Mapping, f, s)
         }
 
         /// This is basically the max mapping function applied to the bag(p) and |V(G)|.
         /// It returns the number of mappings from bag(p) to |V(G)|
         pub fn max_bag_mappings(&self, node : TreeNode) -> Mapping{
-            integer_functions::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
-                                            self.to_graph.node_count() as Mapping )
+            integer_functions_methods::max_mappings(self.nice_tree_decomposition.bag(node).unwrap().len() as Mapping,
+                                                    self.to_graph.node_count() as Mapping )
         }
 
         /// Create a hashmap which maps each node p to a sorted vector of Vertices representing the bag of p.
@@ -166,7 +166,7 @@ pub mod equivalence_class_algorithm{
             let mut graph : MatrixGraph<(), (), Undirected> = petgraph::matrix_graph::MatrixGraph::new_undirected();
             let number_of_vertices = self.nice_tree_decomposition.vertex_count();
 
-            for i in 0..number_of_vertices{
+            for _ in 0..number_of_vertices{
                 graph.add_node(());
             }
 
@@ -265,12 +265,12 @@ pub mod equivalence_class_algorithm{
 
                     // maps vertex to its significance in the bag of p
                     let mut significance_hash = HashMap::new();
-                    for i in 0..sorted_p_bag.len() {
-                        significance_hash.insert(sorted_p_bag[i], i);
+                    for (i, item) in sorted_p_bag.iter().enumerate(){
+                        significance_hash.insert(*item, i);
                     }
 
                     // get the integer representation of all possible edges until q
-                    let possible_edges_of_q_integer = dpdata.possible_edges(q).unwrap().as_ref();
+                    let possible_edges_of_q_integer = dpdata.possible_edges(q).unwrap();
                     let possible_edges_of_q_integer = dpdata.edges_to_integer_representation(possible_edges_of_q_integer);
 
                     // loop over all subsets of possible_edges_until_p
@@ -330,7 +330,7 @@ pub mod equivalence_class_algorithm{
 
                                 let old_edges_list = dpdata.intersection(edges_integer, possible_edges_of_q_integer);
                                 dpdata.set(p, edges_integer ,f_prime,
-                                           dpdata.get(&q, &old_edges_list,&f_q).unwrap().clone() * (condition as u64 ));
+                                           *dpdata.get(&q, &old_edges_list,&f_q).unwrap() * (condition as u64 ));
 
                             }
                         }
@@ -391,10 +391,10 @@ pub mod equivalence_class_algorithm{
                         let q2 = children.get(1).unwrap();
 
                         // get the integer representation of all possible edges until q
-                        let possible_edges_of_q1_integer = dpdata.possible_edges(*q1).unwrap().as_ref();
+                        let possible_edges_of_q1_integer = dpdata.possible_edges(*q1).unwrap();
                         let possible_edges_of_q1_integer = dpdata.edges_to_integer_representation(possible_edges_of_q1_integer);
 
-                        let possible_edges_of_q2_integer = dpdata.possible_edges(*q2).unwrap().as_ref();
+                        let possible_edges_of_q2_integer = dpdata.possible_edges(*q2).unwrap();
                         let possible_edges_of_q2_integer = dpdata.edges_to_integer_representation(possible_edges_of_q2_integer);
 
                         // get the indices of all possible edges in the subtree rooted at p
@@ -435,11 +435,11 @@ pub mod equivalence_class_algorithm{
         // final return of all hom numbers
         let mut graph_hom_number_list = vec![];
 
-        let mut final_list = dpdata.table.get(&ntd.root()).unwrap();
+        let final_list = dpdata.table.get(&ntd.root()).unwrap();
         for ((graph_number, i),hom_number) in final_list{
 
             if *i == 0 {
-                graph_hom_number_list.push((dpdata.edges_to_graph(*graph_number), hom_number.clone()) );
+                graph_hom_number_list.push((dpdata.edges_to_graph(*graph_number), *hom_number) );
             }
         }
         graph_hom_number_list
