@@ -1,10 +1,10 @@
 
 pub mod single_running_time_measurement{
     use std::fs;
-    use std::fs::ReadDir;
+    use std::fs::{OpenOptions, ReadDir};
+    use std::ops::Add;
     use std::path::Path;
-    use std::time::Instant;
-    use chrono;
+    use std::time::{Duration, Instant};
     use csv;
     use itertools::Itertools;
     use crate::equivalence_class_algorithm::algorithm::equivalence_class_algorithm;
@@ -42,27 +42,37 @@ pub mod single_running_time_measurement{
 
 
 
+
     /// measure runtime
     pub fn measure_running_time(){
 
 
         // Construct file path of output file
         let result_path = "./target/benchmark_results/";
-        let timestamp = chrono::Local::now().to_string();
-        let filepath = format!("{}experiment_{}_results.csv",result_path, timestamp);
+        let date = chrono::Local::now().timestamp().to_string();
+
+        let filepath = format!("{}experiment_{}_results.csv", result_path, date);
         let filepath = Path::new(&filepath);
 
-        let mut wtr = csv::Writer::from_path(filepath);
+
 
 
         // here we can select the set of nice tree decompositions and the set of graphs (to_graph)
         // we want to compare with each other
-        for ntd_path in get_path_ntd_paths(){
-
+        for ntd_path in fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds/final_selection").unwrap(){
 
             let ntd_name = ntd_path.as_ref().unwrap().file_name();
 
-            for graph_path in get_auto_generated_graph_paths(){
+            for graph_path in fs::read_dir("./data/metis_graphs/final_selection").unwrap(){
+
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .append(true)
+                    .open(filepath)
+                    .unwrap();
+
+                let mut wtr = csv::Writer::from_writer(file);
 
                 let graph_name = graph_path.as_ref().unwrap().file_name();
 
@@ -94,13 +104,34 @@ pub mod single_running_time_measurement{
 
                 }
 
+                let sum : Duration = measurements.iter().sum();
+                let avg = sum.div_f32(measurements.len() as f32);
+                println!("average running time is {:?}", avg);
+
+                wtr.write_record(&[
+                    "equivalence algorithm",
+                    &ntd_name.to_str().unwrap(),
+                    &width.to_string(),
+                    &v_t.to_string(),
+                    &e_tau.to_string(),
+                    &v_tau.to_string(),
+                    &graph_name.to_str().unwrap(),
+                    &v_g.to_string(),
+                    &e_g.to_string(),
+                    &measurements[0].as_millis().to_string(),
+                    &measurements[1].as_millis().to_string(),
+                    &measurements[2].as_millis().to_string(),
+                    &measurements[3].as_millis().to_string(),
+                    &measurements[4].as_millis().to_string(),
+                    &avg.as_micros().to_string()
+                ]
+                );
+
+                wtr.flush();
+
             }
         }
 
-        // iterate over all loaded graphs and ntds
-        // for each combination test 5 times
-        // calculate average
-        // safe results in file
 
 
     }
