@@ -12,9 +12,9 @@ FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/complete_ntds/'
 # this may be a worst case instance
 def complete_ntd(n):
 
-    output = "# auto generated nice complete tree decomposition with " + str(n) + " vertices and " + str(int((n**2 + n) / 2)) +  " possible edges. \n"
+    output = "# auto generated nice complete tree decomposition with " + str(n) + " vertices and " + str(int((n**2 + n) / 2)) +  " possible edges.\n"
     output += "s " + str(2*n) + " 2 " + str(n) + "\n"
-    output += "n 1 l 1 \n"
+    output += "n 1 l 1\n"
 
     node_counter = 2
 
@@ -27,15 +27,18 @@ def complete_ntd(n):
         node_counter += 1
 
     for i in range(n - 1,-1, -1):
-        output += "n " + str(node_counter) + " f "
+        output += "n " + str(node_counter) + " f"
         for j in range(1,i+1):
-            output += str(j) + " "
+            output +=  " " + str(j)
         output += "\n"
 
         node_counter += 1
 
     for i in range(1, node_counter - 1):
-        output += "a " + str(i + 1) + " " + str(i) + "\n"
+        output += "a " + str(i + 1) + " " + str(i)
+
+        if i < node_counter - 2:
+            output += "\n"
 
     return output
 
