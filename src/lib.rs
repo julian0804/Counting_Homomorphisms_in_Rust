@@ -8,4 +8,4 @@ pub mod diaz;
 pub mod equivalence_class_algorithm;
 pub mod integer_functions;
 pub mod graph_generation;
-pub mod running_time_tests;
+pub mod experiments;

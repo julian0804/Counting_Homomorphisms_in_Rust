@@ -6,7 +6,7 @@
 # number of nodes = 2 * n
 
 
-FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/'
+FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/complete_ntds/'
 
 # generates a ntd with all edges possible
 # this may be a worst case instance

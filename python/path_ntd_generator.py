@@ -6,7 +6,7 @@
 # number of nodes = 2 * n
 
 
-FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/'
+FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/path_ntds/'
 
 # simply generating a path like nice tree decomposition
 def path_ntd(n):

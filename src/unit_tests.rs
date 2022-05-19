@@ -94,7 +94,7 @@ pub mod nice_tree_decomposition_tests{
         let ntd = ntd_test_example();
         assert_eq!(ntd.stingy_ordering(), vec![0,1,2,3,4,5,6,7,8,9]);
 
-        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
         assert_eq!(ntd.stingy_ordering(),vec![0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
     }
 
@@ -180,7 +180,7 @@ pub mod tree_decomposition_handler_tests{
     #[test]
     pub fn test_ntd_import() {
         let ntd = ntd_test_example();
-        assert_eq!(import_ntd("data/nice_tree_decompositions/example.ntd").unwrap(), ntd);
+        assert_eq!(import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example.ntd").unwrap(), ntd);
     }
 }
 
@@ -350,13 +350,13 @@ pub mod diaz_tests{
 
         let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,1280);
 
         let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
         let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
-        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,256);
 
@@ -400,7 +400,7 @@ pub mod graph_generation_test{
     #[test]
     fn test_generate_possible_edges()
     {
-        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
         let possible_edge_hash = generate_possible_edges(&ntd);
 
         assert!(compare_edge_lists(possible_edge_hash.get(&1).unwrap() , &vec![(4,2), (2,2), (4,4)] ));
@@ -455,7 +455,7 @@ pub mod algorithm_comparison_test{
     #[test]
     fn compare_brute_force_with_diaz()
     {
-        let ntd = import_ntd("data/nice_tree_decompositions/example_2.ntd").unwrap();
+        let ntd = import_ntd("../data/nice_tree_decompositions/benchmark_ntds/handmade/example_2.ntd").unwrap();
         let possible_edges = generate_possible_edges(&ntd);
 
         let all_possible_edges = possible_edges.get(&ntd.root()).unwrap().clone();
