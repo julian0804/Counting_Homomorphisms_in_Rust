@@ -19,9 +19,9 @@ def complete_ntd(n):
     node_counter = 2
 
     for i in range(2,n+1):
-        output += "n " + str(node_counter) + " i "
+        output += "n " + str(node_counter) + " i"
         for j in range(1,i+1):
-            output += str(j) + " "
+            output += " " + str(j)
         output += "\n"
 
         node_counter += 1
