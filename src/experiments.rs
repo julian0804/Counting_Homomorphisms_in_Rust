@@ -1,5 +1,5 @@
 
-pub mod single_running_time_measurement{
+pub mod single_running_time_measurement {
     use std::fs;
     use std::fs::{OpenOptions, ReadDir};
     use std::ops::Add;
@@ -41,30 +41,87 @@ pub mod single_running_time_measurement{
     }
 
 
-
-
-    /// measure runtime
-    pub fn measure_running_time(){
-
+    /// lists necessary information of the tree decomposition and write them into a csv file
+    pub fn list_ntd_data() {
 
         // Construct file path of output file
         let result_path = "./target/benchmark_results/";
+        let filepath = format!("{}ntd_data.csv", result_path);
+        let filepath = Path::new(&filepath);
+
+        for ntd_path in fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds/final_selection").unwrap() {
+            let ntd_name = ntd_path.as_ref().unwrap().file_name();
+
+            println!("file: {:?}", ntd_name);
+
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .append(true)
+                .open(filepath)
+                .unwrap();
+
+            let mut wtr = csv::Writer::from_writer(file);
+
+
+            let ntd = import_ntd(ntd_path.as_ref().unwrap().path()).unwrap();
+
+            let width = ntd.width();
+            let v_t = ntd.node_count();
+            let e_tau = generate_possible_edges(&ntd).get(&ntd.root()).unwrap().len();
+            let v_tau = ntd.vertex_count();
+
+            wtr.write_record(&["DATA",
+                &ntd_name.to_str().unwrap(),
+                &width.to_string(),
+                &v_t.to_string(),
+                &e_tau.to_string(),
+                &v_tau.to_string()]);
+        }
+    }
+
+    /// This function imports a experiment matrix and measures the marked combinations
+    pub fn run_experiment(matrix_file: &Path) {
+
+        // Construct file path of output file
+        let result_path = "./target/experiment_results/";
         let date = chrono::Local::now().timestamp().to_string();
 
-        let filepath = format!("{}experiment_{}_results.csv", result_path, date);
+        let name = matrix_file.file_name().unwrap().to_str().unwrap();
+
+        let filepath = format!("{}experiment_{}_results.csv", result_path, name);
         let filepath = Path::new(&filepath);
 
 
+        // fixing the experiment paths
+        let ntd_path = "./data/nice_tree_decompositions/benchmark_ntds/final_selection/";
+        let graph_path = "./data/metis_graphs/final_selection/";
 
+        let mut reader = csv::Reader::from_path(matrix_file).unwrap();
 
-        // here we can select the set of nice tree decompositions and the set of graphs (to_graph)
-        // we want to compare with each other
-        for ntd_path in fs::read_dir("./data/nice_tree_decompositions/benchmark_ntds/final_selection").unwrap(){
+        let headers = reader.headers().unwrap().clone();
 
-            let ntd_name = ntd_path.as_ref().unwrap().file_name();
+        // iterates over all ntd
+        for record in reader.records() {
+            let record = record.unwrap();
+            let ntd_name = &record[0];
 
-            for graph_path in fs::read_dir("./data/metis_graphs/final_selection").unwrap(){
+            let single_ntd_path = format!("{}{}", ntd_path, ntd_name);
+            let single_ntd_path = Path::new(&single_ntd_path);
 
+            // iterate over all graphs
+            for (u, v) in record.iter().enumerate() {
+                // u = 0 is just the ntd_name or the graph should not been measured
+                if u == 0 || v.parse::<u32>().unwrap() == 0 { continue; }
+
+                let graph_name = &headers[u];
+                let single_graph_path = format!("{}{}", graph_path, graph_name);
+                let single_graph_path = Path::new(&single_graph_path);
+
+                let ntd = import_ntd(single_ntd_path).unwrap();
+                let graph = import_metis(single_graph_path).unwrap();
+
+                // Open the writer for the csv output
                 let mut file = OpenOptions::new()
                     .write(true)
                     .create(true)
@@ -73,13 +130,6 @@ pub mod single_running_time_measurement{
                     .unwrap();
 
                 let mut wtr = csv::Writer::from_writer(file);
-
-                let graph_name = graph_path.as_ref().unwrap().file_name();
-
-                println!("Calculating number of homomorphisms for nice tree decomposition {:?} and graph {:?}", ntd_name.to_str(), graph_name.to_str());
-
-                let ntd = import_ntd(ntd_path.as_ref().unwrap().path()).unwrap();
-                let graph = import_metis(graph_path.as_ref().unwrap().path()).unwrap();
 
                 let width = ntd.width();
                 let v_t = ntd.node_count();
@@ -91,31 +141,31 @@ pub mod single_running_time_measurement{
 
                 let mut measurements = vec![];
 
-                for i in 0..5{
+                println!("running experiment for ntd {:?} and graph {:?}", ntd_name, graph_name);
 
-                    println!("running test number {}",i);
+                for i in 0..5 {
+                    println!("running test number {}", i);
                     let start = Instant::now();
 
                     equivalence_class_algorithm(&ntd, &graph);
 
                     let duration = start.elapsed();
-                    println!("time needed: {:?}", duration );
+                    println!("time needed: {:?}", duration);
                     measurements.push(duration);
-
                 }
 
-                let sum : Duration = measurements.iter().sum();
+                let sum: Duration = measurements.iter().sum();
                 let avg = sum.div_f32(measurements.len() as f32);
                 println!("average running time is {:?}", avg);
 
                 wtr.write_record(&[
                     "equivalence algorithm",
-                    &ntd_name.to_str().unwrap(),
+                    &ntd_name,
                     &width.to_string(),
                     &v_t.to_string(),
                     &e_tau.to_string(),
                     &v_tau.to_string(),
-                    &graph_name.to_str().unwrap(),
+                    &graph_name,
                     &v_g.to_string(),
                     &e_g.to_string(),
                     &measurements[0].as_millis().to_string(),
@@ -126,14 +176,7 @@ pub mod single_running_time_measurement{
                     &avg.as_micros().to_string()
                 ]
                 );
-
-                wtr.flush();
-
             }
         }
-
-
-
     }
-
 }

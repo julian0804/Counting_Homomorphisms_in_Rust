@@ -1,9 +1,8 @@
 extern crate core;
 
-use Counting_Homomorphisms::experiments::single_running_time_measurement::measure_running_time;
+use std::path::Path;
+use Counting_Homomorphisms::experiments::single_running_time_measurement::{run_experiment};
 
 fn main(){
-
-    measure_running_time();
-
+    run_experiment(Path::new("data/Experiments/runtime.csv"));
 }
