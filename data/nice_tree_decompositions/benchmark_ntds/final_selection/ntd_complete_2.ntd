@@ -1,0 +1,9 @@
+# auto generated nice complete tree decomposition with 2 vertices and 3 possible edges.
+s 4 2 2
+n 1 l 1
+n 2 i 1 2
+n 3 f 1
+n 4 f
+a 2 1
+a 3 2
+a 4 3

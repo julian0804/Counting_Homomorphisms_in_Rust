@@ -250,17 +250,17 @@ pub mod brute_force_tests{
         assert_eq!(i,256);
 
         let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
@@ -361,19 +361,19 @@ pub mod diaz_tests{
         assert_eq!(i,256);
 
         let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
         let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_4.graph").unwrap();
+        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz::diaz_algorithm::diaz(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);

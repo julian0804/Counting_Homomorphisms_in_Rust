@@ -76,7 +76,7 @@ pub mod tree_structure{
 
             // Controls that index is not out of bounds
             if max(p,q) >= self.number_of_nodes{
-                panic!("Node index out of bounds!");
+                panic!("Node index {} out of bounds! Number of nodes is {}", max(p,q), self.number_of_nodes);
             }
 
             self.parents_list.insert(q,p);
