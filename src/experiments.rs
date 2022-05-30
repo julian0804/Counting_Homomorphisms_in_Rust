@@ -7,7 +7,8 @@ pub mod single_running_time_measurement {
     use std::time::{Duration, Instant};
     use csv;
     use itertools::Itertools;
-    use crate::equivalence_class_algorithm::algorithm::equivalence_class_algorithm;
+    use crate::diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_for_ntd_set;
+    use crate::modified_DP::algorithm::equivalence_class_algorithm;
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::graph_generation::graph_generation_algorithms::generate_possible_edges;
@@ -139,24 +140,44 @@ pub mod single_running_time_measurement {
                 let v_g = graph.node_count();
                 let e_g = graph.edge_count();
 
-                let mut measurements = vec![];
 
-                println!("running experiment for ntd {:?} and graph {:?}", ntd_name, graph_name);
+
+                //Equivalence class algorithm
+                let mut measurements_equivalence_algorithm = vec![];
+                println!("Equivalence Algorithm: running experiment for ntd {:?} and graph {:?}", ntd_name, graph_name);
 
                 for i in 0..5 {
-                    println!("running test number {}", i);
+                    println!("running test number {}", i + 1);
                     let start = Instant::now();
 
                     equivalence_class_algorithm(&ntd, &graph);
 
                     let duration = start.elapsed();
                     println!("time needed: {:?}", duration);
-                    measurements.push(duration);
+                    measurements_equivalence_algorithm.push(duration);
                 }
 
-                let sum: Duration = measurements.iter().sum();
-                let avg = sum.div_f32(measurements.len() as f32);
-                println!("average running time is {:?}", avg);
+                let sum: Duration = measurements_equivalence_algorithm.iter().sum();
+                let avg_equivalence_algorithm = sum.div_f32(measurements_equivalence_algorithm.len() as f32);
+                println!("average running time is {:?}", avg_equivalence_algorithm);
+
+                println!("Diaz: running experiment for ntd {:?} and graph {:?}", ntd_name, graph_name);
+                let mut measurements_diaz = vec![];
+
+                for i in 0..5 {
+                    println!("running test number {}", i + 1);
+                    let start = Instant::now();
+
+                    diaz_serna_thilikos_for_ntd_set(&ntd, &graph);
+
+                    let duration = start.elapsed();
+                    println!("time needed: {:?}", duration);
+                    measurements_diaz.push(duration);
+                }
+
+                let sum: Duration = measurements_diaz.iter().sum();
+                let avg_diaz = sum.div_f32(measurements_diaz.len() as f32);
+                println!("average running time is {:?}", avg_diaz);
 
                 wtr.write_record(&[
                     "equivalence algorithm",
@@ -168,12 +189,18 @@ pub mod single_running_time_measurement {
                     &graph_name,
                     &v_g.to_string(),
                     &e_g.to_string(),
-                    &measurements[0].as_millis().to_string(),
-                    &measurements[1].as_millis().to_string(),
-                    &measurements[2].as_millis().to_string(),
-                    &measurements[3].as_millis().to_string(),
-                    &measurements[4].as_millis().to_string(),
-                    &avg.as_micros().to_string()
+                    &measurements_equivalence_algorithm[0].as_millis().to_string(),
+                    &measurements_equivalence_algorithm[1].as_millis().to_string(),
+                    &measurements_equivalence_algorithm[2].as_millis().to_string(),
+                    &measurements_equivalence_algorithm[3].as_millis().to_string(),
+                    &measurements_equivalence_algorithm[4].as_millis().to_string(),
+                    &avg_equivalence_algorithm.as_micros().to_string(),
+                    &measurements_diaz[0].as_millis().to_string(),
+                    &measurements_diaz[1].as_millis().to_string(),
+                    &measurements_diaz[2].as_millis().to_string(),
+                    &measurements_diaz[3].as_millis().to_string(),
+                    &measurements_diaz[4].as_millis().to_string(),
+                    &avg_diaz.as_micros().to_string(),
                 ]
                 );
             }
