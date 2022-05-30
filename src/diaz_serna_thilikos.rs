@@ -91,7 +91,7 @@ pub mod diaz_algorithm {
     }
 
     /// Implementation of the algorithm of diaz et all
-    pub fn diaz(from_graph : &MatrixGraph<(),(), Undirected>, ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
+    pub fn diaz_serna_thilikos_algorithm(from_graph : &MatrixGraph<(),(), Undirected>, ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> u64{
 
         let stingy_ordering = ntd.stingy_ordering();
         let mut dp_data = DPData::new(from_graph, to_graph, ntd);
@@ -247,17 +247,17 @@ pub mod diaz_algorithm {
     }
 
     /// Implementation of diaz et all for all graphs in $H_\tau$
-    pub fn diaz_for_ntd_set(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)>{
+    /// Here the graph generation is already contained in the function.
+    /// This method is mainly used for testing.
+    pub fn diaz_serna_thilikos_for_ntd_set(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)>{
         let mut result = vec![];
 
         let possible_edges = generate_possible_edges(ntd);
 
         let graphs = generate_graphs(ntd.vertex_count() as u64,
                                      possible_edges.get(&ntd.root()).unwrap().clone() );
-
         for graph in graphs{
-
-            let hom_number = diaz(&graph, ntd, to_graph);
+            let hom_number = diaz_serna_thilikos_algorithm(&graph, ntd, to_graph);
             result.push(( graph, hom_number));
         }
 
