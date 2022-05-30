@@ -10,6 +10,7 @@ pub mod integer_functions_methods {
     /// Given the integer function f of basis n. Apply returns the digit with significance s.
     /// This is achieved by by shifting all digits s positions to the right and then take the rest
     /// of the division by n which removes the least significant digit.
+    #[inline]
     pub fn apply(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
         ( f / (n.pow(s as u32) as u64) ) % n
     }
@@ -18,6 +19,7 @@ pub mod integer_functions_methods {
     /// This will be done by shifting all digits with significance higher than s one position
     /// to the left(increase their significance by one). Then the digit with significance s will
     /// be set to v
+    #[inline]
     pub fn extend(n : Mapping, f : Mapping, s : Mapping, v : Mapping) -> Mapping{
         let r = f % (n.pow(s as u32) as Mapping);
         let l = f - r;
@@ -27,6 +29,7 @@ pub mod integer_functions_methods {
     /// Given the integer function f of basis n. Reduce decreases the number of digits by one.
     /// This will be done by deleting the digit with significance s and then shifting all digits
     /// with higher significance one to the right (decrease their significance by one).
+    #[inline]
     pub fn reduce(n : Mapping, f : Mapping, s : Mapping) -> Mapping{
         let r = f % n.pow(s as u32);
         let l = f - (f % n.pow((s + 1) as u32));
@@ -36,6 +39,7 @@ pub mod integer_functions_methods {
     /// Returns the maximal amount of mappings from a set of d elements to
     /// a set of n elements. This mappings can be represented by the integers
     /// {0,1,...,max_mapping - 1}
+    #[inline]
     pub fn max_mappings(d : Mapping, n : Mapping) -> Mapping{
         n.pow(d as u32)
     }
