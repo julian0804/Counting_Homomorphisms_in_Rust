@@ -7,7 +7,7 @@ pub mod algorithm {
     use petgraph::matrix_graph::{MatrixGraph, NodeIndex};
     use petgraph::Undirected;
     use petgraph::visit::NodeIndexable;
-    use crate::diaz::diaz_algorithm::diaz;
+    use crate::diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm;
     use crate::graph_generation::graph_generation_algorithms::generate_possible_edges;
     use crate::integer_functions::integer_functions_methods;
     use crate::integer_functions::integer_functions_methods::Mapping;
