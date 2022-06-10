@@ -51,4 +51,12 @@ a 10 9
 
 Note that the indices in the file go from 1 to N while the internal representation consists of indices 0 to N-1.
 
-## How to run
+## How to run the Experiments
+
+1. clone the complete repository. Test data is already included.
+2. Run the command `cargo test` in the main project folder to run unit tests.
+3. Run the command `cargo run --release` in the main project folder to start tests.
+4. finish
+5. To visualize the results use the `evaluation.ipynb` file, which can 
+be executed with jupyter-lab and immediately shows the results. Make sure, you have installed
+the `seaborn` python package to run the code.

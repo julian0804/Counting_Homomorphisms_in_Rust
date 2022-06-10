@@ -170,8 +170,6 @@ pub mod algorithm {
                 graph.add_node(());
             }
 
-            // todo: create generate_graph function which creates a single graph and reduce amount of code
-
             let mut edge_list = vec![];
             // extract possible edges by looping over all possibles indices
             for i in 0..self.all_possible_edges.len() as u32
@@ -190,12 +188,6 @@ pub mod algorithm {
 
         }
     }
-
-
-    // Additional functions:
-    // - Edge to index
-    // - Index to edge
-    // - possible edges: mapping TreeNode -> Vec<Indices>
 
     /// implementation of the equivalence class algorithm
     pub fn modified_dp(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)> {
