@@ -201,7 +201,7 @@ pub mod graph_handler_tests{
             (5, 4), (5, 3), (5, 6),
             (6, 5), (6, 3)];
 
-        let g = import_metis("data/metis_graphs/tiny_01.graph").unwrap();
+        let g = import_metis("data/metis_graphs/handmade/tiny_01.graph").unwrap();
 
         assert_eq!(g.node_count(), 7);
         assert_eq!(g.edge_count(), 11);
@@ -239,33 +239,33 @@ pub mod brute_force_tests{
 
     #[test]
     fn test_brute_force() {
-        let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_2.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/handmade/to_2.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,1280);
 
-        let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_3.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/handmade/to_3.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,256);
 
-        let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_4.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_5.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_6.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/bench_1.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_7.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let from_graph = import_metis("./data/metis_graphs/handmade/from_7.graph").unwrap();
+        let to_graph = import_metis("./data/metis_graphs/handmade/to_2.graph").unwrap();
         let i = simple_brute_force(&from_graph, &to_graph);
         assert_eq!(i,960);
     }
@@ -282,8 +282,8 @@ pub mod diaz_tests{
     #[test]
     fn test_dpddata() {
 
-        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_5.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_3.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
 
         let mut dp_data = diaz_serna_thilikos::diaz_algorithm::DPData::new(&from_graph, &to_graph, &ntd);
@@ -348,38 +348,38 @@ pub mod diaz_tests{
     #[test]
     fn test_diaz(){
 
-        let from_graph = import_metis("data/metis_graphs/from_2.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_2.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_2.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,1280);
 
-        let from_graph = import_metis("data/metis_graphs/from_3.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_3.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_3.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_8.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,256);
 
-        let from_graph = import_metis("data/metis_graphs/from_4.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_4.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_5.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_5.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_6.graph").unwrap();
-        let to_graph = import_metis("../data/metis_graphs/bench_1.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_6.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/bench_1.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,0);
 
-        let from_graph = import_metis("data/metis_graphs/from_7.graph").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let from_graph = import_metis("data/metis_graphs/handmade/from_7.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_2.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_6.ntd").unwrap();
         let i = diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm(&from_graph, &ntd, &to_graph);
         assert_eq!(i,960);
@@ -462,7 +462,7 @@ pub mod algorithm_comparison_test{
 
         let graphs = generate_graphs(ntd.vertex_count() as u64, all_possible_edges);
 
-        let second_graph = import_metis("data/metis_graphs/to_2.graph").unwrap();
+        let second_graph = import_metis("data/metis_graphs/handmade/to_2.graph").unwrap();
 
         for g in &graphs{
             assert_eq!(diaz_serna_thilikos_algorithm(g, &ntd, &second_graph), simple_brute_force(g, &second_graph));
@@ -476,7 +476,7 @@ pub mod equivalence_class_algorithm_test{
     use std::arch::x86_64::_mm256_div_ps;
     use petgraph::dot::Dot;
     use crate::diaz_serna_thilikos::diaz_algorithm::diaz_serna_thilikos_algorithm;
-    use crate::modified_DP::algorithm::{DPData, equivalence_class_algorithm};
+    use crate::modified_dp::algorithm::{DPData, modified_dp};
     use crate::file_handler::graph_handler::import_metis;
     use crate::file_handler::tree_decomposition_handler::import_ntd;
     use crate::graph_generation::graph_generation_algorithms::{equal_graphs, generate_graphs, generate_possible_edges};
@@ -486,7 +486,7 @@ pub mod equivalence_class_algorithm_test{
     #[test]
     fn test_dpddata() {
 
-        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_3.graph").unwrap();
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
 
         let mut dp_data = DPData::new(&ntd, &to_graph);
@@ -604,9 +604,9 @@ pub mod equivalence_class_algorithm_test{
     fn test_equivalence_class_algorithm()
     {
         let ntd = import_ntd("data/nice_tree_decompositions/benchmark_ntds/handmade/ntd_bench_7.ntd").unwrap();
-        let to_graph = import_metis("data/metis_graphs/to_3.graph").unwrap();
+        let to_graph = import_metis("data/metis_graphs/handmade/to_3.graph").unwrap();
 
-        let graphs_hom = equivalence_class_algorithm(&ntd, &to_graph);
+        let graphs_hom = modified_dp(&ntd, &to_graph);
 
         let graphs = generate_graphs(ntd.vertex_count() as u64, generate_possible_edges(&ntd).get(&ntd.root()).unwrap().clone());
 
