@@ -50,3 +50,5 @@ a 10 9
 ```
 
 Note that the indices in the file go from 1 to N while the internal representation consists of indices 0 to N-1.
+
+## How to run
