@@ -2,7 +2,10 @@
 
 This repository contains an implementation of the dynamic programm of 
 [Diaz, Serna and Thilikos](https://www.sciencedirect.com/science/article/pii/S0304397502000178)
-for computing the number of homomorphisms between two graphs and a modified version of it. The implementation is written in Rust and additionally contains a 
+for computing the number of homomorphisms between two graphs and a modified version of it. 
+The modification aims at speeding up the computation of the number of graph homomorphisms
+for all graphs which could have a specific tree decomposition.
+Its implementation is written in Rust and additionally contains a 
 file handler for the file format explained in the next sections and some running time experiments.
 
 ## input Format for graphs
