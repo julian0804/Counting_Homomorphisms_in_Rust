@@ -53,7 +53,7 @@ def generate_graph_for_fixed_n_and_m(n,m):
 # A function calculating all graphs
 def generate_graphs():
 
-    max_exponent = 10
+    max_exponent = 14
 
     for i in range(2, max_exponent + 1):
         print("generating graph with " + str(2**i) + " vertices")

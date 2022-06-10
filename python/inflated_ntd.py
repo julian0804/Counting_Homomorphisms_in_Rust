@@ -12,7 +12,7 @@ FILE_PATH = '../data/nice_tree_decompositions/benchmark_ntds/complete_ntds/'
 # this may be a worst case instance
 def complete_ntd(n):
 
-    output = "# auto generated nice complete tree decomposition with " + str(n) + " vertices and " + str(int((n**2 + n) / 2)) +  " possible edges.\n"
+    output = "# auto generated nice complete tree decomposition with " + str(n) + " vertices and " + str(int(n * (n-1) / 2 + n)) +  " possible edges.\n"
     output += "s " + str(2*n) + " 2 " + str(n) + "\n"
     output += "n 1 l 1\n"
 
