@@ -198,7 +198,7 @@ pub mod algorithm {
     // - possible edges: mapping TreeNode -> Vec<Indices>
 
     /// implementation of the equivalence class algorithm
-    pub fn equivalence_class_algorithm(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)> {
+    pub fn modified_dp(ntd : &NiceTreeDecomposition, to_graph : &MatrixGraph<(),(), Undirected>) -> Vec<(MatrixGraph<(), (), Undirected>, u64)> {
 
         let stingy_ordering = ntd.stingy_ordering();
         let mut dpdata = DPData::new(ntd,to_graph);
