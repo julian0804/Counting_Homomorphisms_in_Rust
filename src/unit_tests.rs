@@ -222,7 +222,7 @@ pub mod graph_handler_tests{
             (5, 4), (5, 3), (5, 6),
             (6, 5), (6, 3)];
 
-        let g = import_dimacs("data/dimacs_graphs/tiny_01.gr").unwrap();
+        let g = import_dimacs("data/dimacs_graphs/test_graph.gr").unwrap();
 
         assert_eq!(g.node_count(), 7);
         assert_eq!(g.edge_count(), 11);
