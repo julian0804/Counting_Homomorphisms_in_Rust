@@ -1,0 +1,25 @@
+# auto generated nice tree decomposition with 6 vertices and 6 possible edges. 
+s 12 2 6
+n 1 l 1
+n 2 f
+n 3 i 2
+n 4 f
+n 5 i 3
+n 6 f
+n 7 i 4
+n 8 f
+n 9 i 5
+n 10 f
+n 11 i 6
+n 12 f
+a 2 1
+a 3 2
+a 4 3
+a 5 4
+a 6 5
+a 7 6
+a 8 7
+a 9 8
+a 10 9
+a 11 10
+a 12 11

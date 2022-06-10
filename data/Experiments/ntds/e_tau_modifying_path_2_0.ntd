@@ -1,0 +1,9 @@
+# auto generated nice tree decomposition with 2 vertices and 2 possible edges. 
+s 4 2 2
+n 1 l 1
+n 2 f
+n 3 i 2
+n 4 f
+a 2 1
+a 3 2
+a 4 3

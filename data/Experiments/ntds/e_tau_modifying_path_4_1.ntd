@@ -1,0 +1,17 @@
+# auto generated nice tree decomposition with 4 vertices and 5 possible edges. 
+s 8 2 4
+n 1 l 1
+n 2 i 1 2
+n 3 f 2
+n 4 f
+n 5 i 3
+n 6 f
+n 7 i 4
+n 8 f
+a 2 1
+a 3 2
+a 4 3
+a 5 4
+a 6 5
+a 7 6
+a 8 7

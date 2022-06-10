@@ -1,0 +1,45 @@
+# auto generated nice tree decomposition with 11 vertices and 15 possible edges. 
+s 22 2 11
+n 1 l 1
+n 2 i 1 2
+n 3 f 2
+n 4 i 2 3
+n 5 f 3
+n 6 i 3 4
+n 7 f 4
+n 8 i 4 5
+n 9 f 5
+n 10 f
+n 11 i 6
+n 12 f
+n 13 i 7
+n 14 f
+n 15 i 8
+n 16 f
+n 17 i 9
+n 18 f
+n 19 i 10
+n 20 f
+n 21 i 11
+n 22 f
+a 2 1
+a 3 2
+a 4 3
+a 5 4
+a 6 5
+a 7 6
+a 8 7
+a 9 8
+a 10 9
+a 11 10
+a 12 11
+a 13 12
+a 14 13
+a 15 14
+a 16 15
+a 17 16
+a 18 17
+a 19 18
+a 20 19
+a 21 20
+a 22 21

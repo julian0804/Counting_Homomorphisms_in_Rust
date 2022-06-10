@@ -1,0 +1,13 @@
+# auto generated nice tree decomposition with 3 vertices and 3 possible edges. 
+s 6 2 3
+n 1 l 1
+n 2 f
+n 3 i 2
+n 4 f
+n 5 i 3
+n 6 f
+a 2 1
+a 3 2
+a 4 3
+a 5 4
+a 6 5
