@@ -36,6 +36,8 @@ Consisting of the following parts:
 3) The following lines describe the adjacency of the graph. 
 The i-th non-command line reports the neighbours of the i-th vertex
 
+It also supports the graph format used for the [PACE challenge](https://github.com/PACE-challenge/Treewidth)
+
 ## Input Format for NTD
 
 Here is an example for the input format of nice tree decompositions ending with `.ntd` extension. 
